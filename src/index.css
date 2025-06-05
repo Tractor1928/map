@@ -1,0 +1,32 @@
+/* src/index.css */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* 禁用全局滚动 */
+  position: fixed; /* 防止移动设备上的弹性滚动 */
+  touch-action: none; /* 禁用默认触摸行为 */
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.node {
+  border: 1px solid black;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 8px;
+}
+
+.node-children {
+  margin-left: 20px; /* 子节点相对于父节点的缩进 */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

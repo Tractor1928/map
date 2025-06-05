@@ -1,0 +1,23 @@
+.connection-path {
+  pointer-events: none; /* 确保连接线不会阻挡鼠标事件 */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 问题节点连接线样式 */
+.connection-path.question {
+  stroke: #1890ff;
+  stroke-opacity: 0.7;
+}
+
+/* 回答节点连接线样式 */
+.connection-path.answer {
+  stroke: #52c41a;
+  stroke-opacity: 0.7;
+}
+
+/* 选中节点的连接线样式 */
+.node.selected + .connection-path {
+  stroke: #2196f3;
+  stroke-width: 2px;
+} 
