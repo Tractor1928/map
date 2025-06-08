@@ -1,5 +1,36 @@
 {
+  "name": "ai-mind-map",
+  "version": "1.0.0",
+  "description": "基于simple-mind-map的AI思维导图应用",
+  "homepage": "https://YOUR_USERNAME.github.io/map",
+  "private": true,
+  "scripts": {
+    "dev": "cd web && npm run serve",
+    "build": "cd web && npm run build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    "lint": "cd web && npm run lint",
+    "format": "cd web && npm run format"
+  },
   "dependencies": {
     "simple-mind-map": "^0.14.0-fix.1"
+  },
+  "devDependencies": {
+    "gh-pages": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_USERNAME/map.git"
+  },
+  "keywords": [
+    "mindmap",
+    "vue",
+    "思维导图",
+    "ai"
+  ],
+  "author": "YOUR_NAME",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/map/issues"
   }
 }

@@ -1,0 +1,45 @@
+name: 部署到GitHub Pages
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-js-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          package-lock.json
+          web/package-lock.json
+    
+    - name: 安装根目录依赖
+      run: npm ci
+    
+    - name: 安装web目录依赖
+      run: cd web && npm ci
+    
+    - name: 构建项目
+      run: npm run build
+    
+    - name: 部署到GitHub Pages
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+        force_orphan: true
+        commit_message: 'Deploy ${{ github.sha }}' 
