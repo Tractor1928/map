@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "cd web && npm run serve",
-    "build": "cd web && NODE_OPTIONS=--openssl-legacy-provider npm run build",
+    "build": "node build.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "lint": "cd web && npm run lint",

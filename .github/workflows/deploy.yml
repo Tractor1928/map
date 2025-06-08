@@ -34,8 +34,6 @@ jobs:
     
     - name: 构建项目
       run: npm run build
-      env:
-        NODE_OPTIONS: --openssl-legacy-provider
     
     - name: 部署到GitHub Pages
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
