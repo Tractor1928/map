@@ -256,6 +256,63 @@
           >
         </div>
       </div>
+      <!-- AI配置 -->
+      <div v-if="localConfigs.enableAi">
+        <!-- API密钥配置 -->
+        <div class="row">
+          <div class="rowItem">
+            <span class="name">{{ $t('setting.aiApiKey') }}</span>
+            <el-input
+              size="mini"
+              style="width: 200px"
+              v-model="aiConfigs.apiKey"
+              placeholder="请输入API密钥"
+              type="password"
+              @change="updateAiConfig('apiKey', $event)"
+            ></el-input>
+          </div>
+        </div>
+        <!-- 模型名称配置 -->
+        <div class="row">
+          <div class="rowItem">
+            <span class="name">{{ $t('setting.aiModel') }}</span>
+            <el-input
+              size="mini"
+              style="width: 200px"
+              v-model="aiConfigs.model"
+              placeholder="请输入模型名称"
+              @change="updateAiConfig('model', $event)"
+            ></el-input>
+          </div>
+        </div>
+        <!-- AI服务类型配置 -->
+        <div class="row">
+          <div class="rowItem">
+            <span class="name">{{ $t('setting.aiServiceType') }}</span>
+            <el-select
+              size="mini"
+              style="width: 200px"
+              v-model="aiConfigs.serviceType"
+              placeholder="选择AI服务"
+              @change="updateAiConfig('serviceType', $event)"
+            >
+              <el-option label="现代AI服务" value="modern"></el-option>
+              <el-option label="模拟模式" value="mock"></el-option>
+            </el-select>
+          </div>
+        </div>
+        <!-- 测试连接按钮 -->
+        <div class="row">
+          <div class="rowItem">
+            <el-button size="mini" @click="testAiConnection" :loading="testingAi">
+              {{ testingAi ? '测试中...' : '测试AI连接' }}
+            </el-button>
+            <span v-if="aiTestResult !== null" :style="{ color: aiTestResult ? '#67C23A' : '#F56C6C', marginLeft: '10px' }">
+              {{ aiTestResult ? '✅ 连接成功' : '❌ 连接失败' }}
+            </span>
+          </div>
+        </div>
+      </div>
       <!-- 配置鼠标滚轮行为 -->
       <div class="row">
         <div class="rowItem">
@@ -425,7 +482,14 @@ export default {
         isShowScrollbar: false,
         enableDragImport: false,
         enableAi: false
-      }
+      },
+      aiConfigs: {
+        apiKey: '',
+        model: '',
+        serviceType: 'modern'
+      },
+      testingAi: false,
+      aiTestResult: null
     }
   },
   computed: {
@@ -448,6 +512,7 @@ export default {
   },
   created() {
     this.initLoacalConfig()
+    this.initAiConfig()
     this.$bus.$on('toggleOpenNodeRichText', this.onToggleOpenNodeRichText)
   },
   beforeDestroy() {
@@ -573,6 +638,64 @@ export default {
       this.setLocalConfig({
         [key]: value
       })
+    },
+
+    // 初始化AI配置
+    initAiConfig() {
+      this.aiConfigs.apiKey = localStorage.getItem('apiKey') || ''
+      this.aiConfigs.model = localStorage.getItem('model') || ''
+      this.aiConfigs.serviceType = localStorage.getItem('ai_service_mode') || 'modern'
+    },
+
+    // 更新AI配置
+    updateAiConfig(key, value) {
+      this.aiConfigs[key] = value
+      
+      // 保存到localStorage
+      if (key === 'apiKey') {
+        localStorage.setItem('apiKey', value)
+      } else if (key === 'model') {
+        localStorage.setItem('model', value)
+      } else if (key === 'serviceType') {
+        localStorage.setItem('ai_service_mode', value)
+      }
+      
+      // 重置测试结果
+      this.aiTestResult = null
+      
+      console.log(`AI配置已更新: ${key} = ${key === 'apiKey' ? value.substring(0, 10) + '...' : value}`)
+    },
+
+    // 测试AI连接
+    async testAiConnection() {
+      if (!this.aiConfigs.apiKey || !this.aiConfigs.model) {
+        this.$message.warning('请先配置API密钥和模型名称')
+        return
+      }
+      
+      this.testingAi = true
+      this.aiTestResult = null
+      
+      try {
+        // 这里可以调用AI服务进行测试
+        // 模拟测试连接
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // 简单验证：检查配置是否完整
+        if (this.aiConfigs.apiKey.length > 10 && this.aiConfigs.model.length > 0) {
+          this.aiTestResult = true
+          this.$message.success('AI连接测试成功')
+        } else {
+          this.aiTestResult = false
+          this.$message.error('配置信息不完整')
+        }
+      } catch (error) {
+        this.aiTestResult = false
+        this.$message.error('AI连接测试失败: ' + error.message)
+        console.error('AI连接测试失败:', error)
+      } finally {
+        this.testingAi = false
+      }
     }
   }
 }

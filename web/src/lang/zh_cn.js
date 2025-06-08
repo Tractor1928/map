@@ -87,7 +87,10 @@ export default {
     enableDragImport: '是否允许直接拖拽文件到页面进行导入',
     imgTextMargin: '节点图片和文本间隔',
     textContentMargin: '节点各种内容间隔',
-    enableAi: '是否开启AI功能'
+    enableAi: '是否开启AI功能',
+    aiApiKey: 'API密钥',
+    aiModel: '模型名称',
+    aiServiceType: 'AI服务类型'
   },
   color: {
     moreColor: '更多颜色'
