@@ -20,7 +20,7 @@ jobs:
     - name: 设置Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '16'
+        node-version: '18'
         cache: 'npm'
         cache-dependency-path: |
           package-lock.json
@@ -33,7 +33,15 @@ jobs:
       run: cd web && npm ci
     
     - name: 构建项目
-      run: npm run build
+      run: |
+        echo "🚀 尝试主构建脚本..."
+        npm run build || {
+          echo "❌ 主构建失败，尝试备用构建..."
+          npm run build:fallback || {
+            echo "❌ 备用构建失败，尝试直接构建..."
+            npm run build:direct
+          }
+        }
     
     - name: 部署到GitHub Pages
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'

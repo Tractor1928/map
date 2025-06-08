@@ -7,7 +7,11 @@
   "scripts": {
     "dev": "cd web && npm run serve",
     "build": "node build.js",
-    "predeploy": "npm run build",
+    "build:win": "node build-win.js",
+    "build:fallback": "node build-fallback.js",
+    "build:direct": "cd web && npm run build",
+    "build:legacy": "build-legacy.bat",
+    "predeploy": "build-legacy.bat",
     "deploy": "gh-pages -d dist",
     "lint": "cd web && npm run lint",
     "format": "cd web && npm run format"
