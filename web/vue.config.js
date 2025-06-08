@@ -16,7 +16,7 @@ module.exports = {
     config.plugins.delete('preload')
     // 移除 prefetch 插件
     config.plugins.delete('prefetch')
-    // 支持运行时设置public path
+    // 支持运行时设置public path - 修复GitHub Pages路径问题
     if (!isDev) {
       config
         .plugin('dynamicPublicPathPlugin')
