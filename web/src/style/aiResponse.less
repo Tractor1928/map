@@ -1,0 +1,258 @@
+// AI回答节点样式定义
+// 确保在各种主题下都有良好的视觉效果
+
+// AI回答节点基础样式
+.smm-node[data-ai-response="true"],
+.smm-node.ai-response {
+  .smm-node-shape {
+    border: 2px dashed #1890ff !important;
+    background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%) !important;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+    transition: all 0.3s ease;
+    
+    // AI机器人图标
+    &::before {
+      content: '🤖';
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #1890ff;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+      animation: ai-icon-pulse 2s infinite;
+    }
+  }
+  
+  // 节点文本样式
+  .smm-node-text {
+    color: #1890ff !important;
+    font-style: italic;
+  }
+}
+
+// AI加载状态样式
+.smm-node[data-ai-status="loading"],
+.smm-node.ai-response-loading {
+  .smm-node-shape {
+    animation: ai-thinking 2s infinite;
+    border-color: #1890ff !important;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid transparent;
+      border-top: 2px solid #1890ff;
+      border-radius: 50%;
+      animation: ai-spinner 1s linear infinite;
+    }
+  }
+}
+
+// AI完成状态样式
+.smm-node[data-ai-status="complete"],
+.smm-node.ai-response-complete {
+  .smm-node-shape {
+    border-color: #52c41a !important;
+    background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%) !important;
+    animation: none;
+    
+    &::before {
+      background: #52c41a !important;
+      animation: ai-complete-bounce 0.6s ease-out;
+    }
+  }
+  
+  .smm-node-text {
+    color: #52c41a !important;
+  }
+}
+
+// AI错误状态样式
+.smm-node[data-ai-status="error"],
+.smm-node.ai-response-error {
+  .smm-node-shape {
+    border-color: #ff4d4f !important;
+    background: linear-gradient(135deg, #fff2f0 0%, #ffeded 100%) !important;
+    animation: none;
+    
+    &::before {
+      content: '❌';
+      background: #ff4d4f !important;
+      animation: ai-error-shake 0.5s ease-in-out;
+    }
+  }
+  
+  .smm-node-text {
+    color: #ff4d4f !important;
+  }
+}
+
+// 动画定义
+
+// AI思考动画（呼吸效果）
+@keyframes ai-thinking {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.02);
+  }
+}
+
+// AI图标脉冲动画
+@keyframes ai-icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+// 加载旋转动画
+@keyframes ai-spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// 完成反弹动画
+@keyframes ai-complete-bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// 错误摇摆动画
+@keyframes ai-error-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+// 暗色主题适配
+.dark {
+  .smm-node[data-ai-response="true"],
+  .smm-node.ai-response {
+    .smm-node-shape {
+      background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%) !important;
+      box-shadow: 0 2px 8px rgba(66, 153, 255, 0.25);
+    }
+  }
+  
+  .smm-node[data-ai-status="complete"],
+  .smm-node.ai-response-complete {
+    .smm-node-shape {
+      background: linear-gradient(135deg, #1a365d 0%, #22543d 100%) !important;
+    }
+  }
+  
+  .smm-node[data-ai-status="error"],
+  .smm-node.ai-response-error {
+    .smm-node-shape {
+      background: linear-gradient(135deg, #2d1b1b 0%, #742a2a 100%) !important;
+    }
+  }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+  .smm-node[data-ai-response="true"],
+  .smm-node.ai-response {
+    .smm-node-shape {
+      &::before {
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+        top: -8px;
+        right: -8px;
+      }
+    }
+  }
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  .smm-node[data-ai-response="true"],
+  .smm-node.ai-response {
+    .smm-node-shape {
+      border-width: 3px !important;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.3) !important;
+    }
+  }
+}
+
+// 减少动画模式支持
+@media (prefers-reduced-motion: reduce) {
+  .smm-node[data-ai-response="true"],
+  .smm-node.ai-response {
+    .smm-node-shape {
+      animation: none !important;
+      transition: none !important;
+      
+      &::before {
+        animation: none !important;
+      }
+      
+      &::after {
+        animation: none !important;
+      }
+    }
+  }
+}
+
+// 打印样式
+@media print {
+  .smm-node[data-ai-response="true"],
+  .smm-node.ai-response {
+    .smm-node-shape {
+      border: 2px solid #666 !important;
+      background: #f5f5f5 !important;
+      box-shadow: none !important;
+      animation: none !important;
+      
+      &::before {
+        display: none !important;
+      }
+      
+      &::after {
+        display: none !important;
+      }
+    }
+    
+    .smm-node-text {
+      color: #333 !important;
+    }
+  }
+} 
