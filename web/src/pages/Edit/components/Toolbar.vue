@@ -3,29 +3,7 @@
     <div class="toolbar" ref="toolbarRef">
       <!-- 节点操作 -->
       <div class="toolbarBlock">
-        <ToolbarNodeBtnList :list="horizontalList"></ToolbarNodeBtnList>
-        <!-- 更多 -->
-        <el-popover
-          v-model="popoverShow"
-          placement="bottom-end"
-          width="120"
-          trigger="hover"
-          v-if="showMoreBtn"
-          :style="{ marginLeft: horizontalList.length > 0 ? '20px' : 0 }"
-        >
-          <ToolbarNodeBtnList
-            dir="v"
-            :list="verticalList"
-            @click.native="popoverShow = false"
-          ></ToolbarNodeBtnList>
-          <div slot="reference" class="toolbarBtn">
-            <span class="icon iconfont icongongshi"></span>
-            <span class="text">{{ $t('toolbar.more') }}</span>
-          </div>
-        </el-popover>
-      </div>
-      <!-- 导出 -->
-      <div class="toolbarBlock">
+        <!-- 将新建、打开、另存为移到左侧 -->
         <div class="toolbarBtn" @click="openDirectory" v-if="!isMobile">
           <span class="icon iconfont icondakai"></span>
           <span class="text">{{ $t('toolbar.directory') }}</span>
@@ -63,10 +41,62 @@
         <div
           class="toolbarBtn"
           @click="$bus.$emit('showExport')"
-          style="margin-right: 0;"
         >
           <span class="icon iconfont iconexport"></span>
           <span class="text">{{ $t('toolbar.export') }}</span>
+        </div>
+        
+        <ToolbarNodeBtnList :list="horizontalList"></ToolbarNodeBtnList>
+        <!-- 更多 -->
+        <el-popover
+          v-model="popoverShow"
+          placement="bottom-end"
+          width="120"
+          trigger="hover"
+          v-if="showMoreBtn"
+          :style="{ marginLeft: horizontalList.length > 0 ? '20px' : 0 }"
+        >
+          <ToolbarNodeBtnList
+            dir="v"
+            :list="verticalList"
+            @click.native="popoverShow = false"
+          ></ToolbarNodeBtnList>
+          <div slot="reference" class="toolbarBtn">
+            <span class="icon iconfont icongongshi"></span>
+            <span class="text">{{ $t('toolbar.more') }}</span>
+          </div>
+        </el-popover>
+      </div>
+      <!-- 节点编辑操作 -->
+      <div class="toolbarBlock">
+        <!-- 将同级节点、子节点、删除节点移到右侧 -->
+        <div
+          class="toolbarBtn iconOnly"
+          :class="{
+            disabled: activeNodes.length <= 0 || hasRoot || hasGeneralization
+          }"
+          @click="$bus.$emit('execCommand', 'INSERT_NODE')"
+        >
+          <span class="icon iconfont iconjiedian"></span>
+        </div>
+        <div
+          class="toolbarBtn iconOnly"
+          :class="{
+            disabled: activeNodes.length <= 0 || hasGeneralization
+          }"
+          @click="$bus.$emit('execCommand', 'INSERT_CHILD_NODE')"
+        >
+          <span class="icon iconfont icontianjiazijiedian"></span>
+        </div>
+        <div
+          class="toolbarBtn iconOnly"
+          :class="{
+            disabled: activeNodes.length <= 0
+          }"
+          @click="$bus.$emit('execCommand', 'REMOVE_NODE')"
+          style="margin-right: 0;"
+        >
+          <span class="icon iconfont iconshanchu"></span>
         </div>
         <!-- 本地文件树 -->
         <div
@@ -163,9 +193,6 @@ const defaultBtnList = [
   'back',
   'forward',
   'painter',
-  'siblingNode',
-  'childNode',
-  'deleteNode',
   'image',
   'icon',
   'link',
@@ -206,7 +233,8 @@ export default {
       fileTreeVisible: false,
       rootDirName: '',
       fileTreeExpand: true,
-      waitingWriteToLocalFile: false
+      waitingWriteToLocalFile: false,
+      activeNodes: []
     }
   },
   computed: {
@@ -230,6 +258,20 @@ export default {
         })
       }
       return res
+    },
+    hasRoot() {
+      return (
+        this.activeNodes.findIndex(node => {
+          return node.isRoot
+        }) !== -1
+      )
+    },
+    hasGeneralization() {
+      return (
+        this.activeNodes.findIndex(node => {
+          return node.isGeneralization
+        }) !== -1
+      )
     }
   },
   watch: {
@@ -247,6 +289,7 @@ export default {
   },
   created() {
     this.$bus.$on('write_local_file', this.onWriteLocalFile)
+    this.$bus.$on('node_active', this.onNodeActive)
   },
   mounted() {
     this.computeToolbarShow()
@@ -258,6 +301,7 @@ export default {
   },
   beforeDestroy() {
     this.$bus.$off('write_local_file', this.onWriteLocalFile)
+    this.$bus.$off('node_active', this.onNodeActive)
     window.removeEventListener('resize', this.computeToolbarShowThrottle)
     this.$bus.$off('lang_change', this.computeToolbarShowThrottle)
     window.removeEventListener('beforeunload', this.onUnload)
@@ -529,6 +573,11 @@ export default {
     onNodeNoteDblclick(node, e) {
       e.stopPropagation()
       this.$bus.$emit('showNodeNote', node)
+    },
+
+    // 监听节点激活状态
+    onNodeActive(...args) {
+      this.activeNodes = args[1] ? [...args[1]] : []
     }
   }
 }
@@ -744,6 +793,15 @@ export default {
         color: #bcbcbc;
         cursor: not-allowed;
         pointer-events: none;
+      }
+
+      &.iconOnly {
+        margin-right: 10px;
+        
+        .icon {
+          padding: 0 8px;
+          min-width: 26px;
+        }
       }
 
       .icon {
