@@ -623,6 +623,17 @@ class MindMapNode {
         this.group.css({
           cursor: 'default'
         })
+        // 为文本区域设置文本光标
+        this.group.on('mouseover', (e) => {
+          const target = e.target
+          if (target.tagName === 'text' || target.tagName === 'tspan' || 
+              target.closest('.smm-text-node-wrap') || 
+              target.closest('foreignObject')) {
+            this.group.css({ cursor: 'text' })
+          } else {
+            this.group.css({ cursor: 'default' })
+          }
+        })
         this.bindGroupEvent()
         this.nodeDraw.add(this.group)
         this.layout()

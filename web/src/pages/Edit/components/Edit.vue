@@ -138,7 +138,7 @@ if (process.env.NODE_ENV === 'development') {
 // 注册插件
 MindMap.usePlugin(MiniMap)
   .usePlugin(Watermark)
-  .usePlugin(Drag)
+  // .usePlugin(Drag) // 已禁用拖动插件，允许用户直接选择节点文字
   .usePlugin(KeyboardNavigation)
   .usePlugin(ExportPDF)
   .usePlugin(ExportXMind)

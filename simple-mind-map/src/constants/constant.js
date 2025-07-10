@@ -240,8 +240,34 @@ export const cssContent = `
     stroke-width: 2;
   }
 
-  .smm-text-node-wrap, .smm-expand-btn-text {
+  .smm-text-node-wrap {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+  }
+  
+  .smm-expand-btn-text {
     user-select: none;
+  }
+
+  /* 关键修复：使SVG文本可选择 */
+  .smm-node svg text,
+  .smm-node text.smm-text-node-wrap,
+  .smm-node tspan,
+  .smm-node foreignObject,
+  .smm-node foreignObject * {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    cursor: text !important;
+    pointer-events: auto !important;
+  }
+  
+  /* 确保文本区域覆盖节点默认光标 */
+  .smm-node .smm-text-node-wrap * {
+    cursor: text !important;
   }
 `
 
