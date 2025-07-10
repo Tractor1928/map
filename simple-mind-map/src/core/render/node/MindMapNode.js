@@ -332,6 +332,111 @@ class MindMapNode {
     return changed
   }
 
+  // 处理文字选择事件，创建提问节点
+  handleTextSelection(e) {
+    // 延迟执行，确保选择已完成
+    setTimeout(() => {
+      try {
+        const selection = window.getSelection()
+        if (!selection || selection.rangeCount === 0) {
+          return
+        }
+        
+        const selectedText = selection.toString().trim()
+        if (!selectedText || selectedText.length < 2) {
+          return
+        }
+        
+        // 检查选中的文字是否在当前节点内
+        const range = selection.getRangeAt(0)
+        const nodeElement = this.group.node
+        if (!nodeElement.contains(range.commonAncestorContainer) && 
+            nodeElement !== range.commonAncestorContainer) {
+          return
+        }
+        
+        console.log('🎯 [文字选择] 检测到选中文字:', selectedText)
+        console.log('🎯 [文字选择] 当前节点:', this.getData('text'))
+        
+        // 创建提问节点
+        this.createQuestionNodeFromSelection(selectedText)
+        
+        // 清除选择，避免界面混乱
+        selection.removeAllRanges()
+        
+      } catch (error) {
+        console.error('🎯 [文字选择] 处理文字选择时出错:', error)
+      }
+    }, 50)
+  }
+
+  // 从选中文字创建提问节点
+  createQuestionNodeFromSelection(selectedText) {
+    try {
+      console.log('🤔 [提问节点] 开始创建提问节点:', selectedText)
+      
+             // 生成唯一ID（使用simple-mind-map的工具函数）
+       const uid = 'question_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+      
+      // 创建子节点数据
+      const questionNodeData = {
+        text: selectedText,
+        isQuestion: true, // 标记为提问节点
+        uid: uid
+      }
+      
+      console.log('🤔 [提问节点] 节点数据:', questionNodeData)
+      
+      // 使用思维导图API创建子节点
+      this.mindMap.execCommand('INSERT_CHILD_NODE', false, [this], questionNodeData, [])
+      
+      console.log('🤔 [提问节点] 提问节点创建完成')
+      
+      // 延迟查找创建的节点并触发AI回答
+      setTimeout(() => {
+        this.findAndTriggerAIResponse(uid, selectedText)
+      }, 100)
+      
+    } catch (error) {
+      console.error('🤔 [提问节点] 创建提问节点失败:', error)
+    }
+  }
+
+  // 查找创建的提问节点并触发AI回答
+  findAndTriggerAIResponse(questionNodeUid, questionText) {
+    try {
+      console.log('🔍 [AI触发] 查找提问节点:', questionNodeUid)
+      
+      // 查找创建的提问节点
+      let questionNode = null
+      
+      // 在子节点中查找
+      if (this.children && this.children.length > 0) {
+        questionNode = this.children.find(child => {
+          const childUid = child.getData('uid') || child.uid
+          return childUid === questionNodeUid || child.getData('isQuestion')
+        })
+        
+        // 如果没找到，取最新的子节点
+        if (!questionNode) {
+          questionNode = this.children[this.children.length - 1]
+        }
+      }
+      
+      console.log('🔍 [AI触发] 找到提问节点:', questionNode)
+      
+      if (questionNode) {
+        // 触发AI回答生成（通过mindMap事件）
+        this.mindMap.emit('generate_ai_response_for_selection', questionNode, questionText)
+        console.log('🔍 [AI触发] 已触发AI回答生成事件')
+      } else {
+        console.warn('🔍 [AI触发] 未找到创建的提问节点')
+      }
+    } catch (error) {
+      console.error('🔍 [AI触发] 查找提问节点或触发AI回答失败:', error)
+    }
+  }
+
   // 给节点绑定事件
   bindGroupEvent() {
     // 单击事件，选中节点
@@ -396,6 +501,9 @@ class MindMapNode {
         e.stopPropagation()
       }
       this.mindMap.emit('node_mouseup', this, e)
+      
+      // 检测文字选择并创建提问节点
+      this.handleTextSelection(e)
     })
     this.group.on('mouseenter', e => {
       if (this.isDrag) return
@@ -483,6 +591,7 @@ class MindMapNode {
       return
     }
     this.updateNodeActiveClass()
+    this.updateQuestionNodeClass()
     const {
       alwaysShowExpandBtn,
       notShowExpandBtn,
@@ -579,6 +688,17 @@ class MindMapNode {
     this.group[isActive ? 'addClass' : 'removeClass']('active')
   }
 
+  // 更新提问节点标识
+  updateQuestionNodeClass() {
+    if (!this.group) return
+    const isQuestion = this.getData('isQuestion')
+    if (isQuestion) {
+      this.group.attr('data-is-question', 'true')
+    } else {
+      this.group.attr('data-is-question', null)
+    }
+  }
+
   // 根据是否激活更新节点
   updateNodeByActive(active) {
     if (this.group) {
@@ -596,6 +716,7 @@ class MindMapNode {
         }
       }
       this.updateNodeActiveClass()
+      this.updateQuestionNodeClass()
       this.updateDragHandle()
     }
   }
@@ -623,6 +744,11 @@ class MindMapNode {
         this.group.css({
           cursor: 'default'
         })
+        
+        // 设置提问节点的标识属性
+        if (this.getData('isQuestion')) {
+          this.group.attr('data-is-question', 'true')
+        }
         // 为文本区域设置文本光标
         this.group.on('mouseover', (e) => {
           const target = e.target

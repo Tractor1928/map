@@ -269,6 +269,24 @@ export const cssContent = `
   .smm-node .smm-text-node-wrap * {
     cursor: text !important;
   }
+
+  /* 提问节点样式 */
+  .smm-node[data-is-question="true"] .smm-node-bg {
+    stroke: #1890ff !important;
+    stroke-width: 2px !important;
+    fill: #e6f7ff !important;
+    stroke-dasharray: 5,3 !important;
+  }
+
+  .smm-node[data-is-question="true"]:hover .smm-node-bg {
+    stroke: #40a9ff !important;
+    fill: #bae7ff !important;
+  }
+
+  .smm-node[data-is-question="true"] .smm-text-node-wrap {
+    color: #1890ff !important;
+    font-weight: 500 !important;
+  }
 `
 
 // html自闭合标签列表

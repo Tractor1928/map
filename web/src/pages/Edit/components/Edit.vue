@@ -657,6 +657,20 @@ export default {
         // 这里可以添加AI回答节点的数据持久化逻辑
       })
 
+      // 监听文字选择生成AI回答事件
+      this.mindMap.on('generate_ai_response_for_selection', (questionNode, questionText) => {
+        console.log('🎯 [文字选择AI] 收到文字选择AI回答请求:', questionText)
+        console.log('🎯 [文字选择AI] 提问节点:', questionNode)
+        
+        if (questionNode && questionText) {
+          // 为提问节点生成AI回答
+          this.$nextTick(() => {
+            this.generateAIResponse(questionNode, questionText)
+          })
+        }
+      })
+      console.log('🎯 [事件监听] 已绑定generate_ai_response_for_selection事件')
+
       console.log('🎯 [事件监听] ✅ AI事件监听设置完成')
 
       // 为了调试方便，在控制台输出相关信息
@@ -732,7 +746,7 @@ function example() {
         
         // 开发环境下添加更多测试工具
         if (process.env.NODE_ENV === 'development') {
-          console.log('🎯 [开发模式] 加载markdown测试工具...')
+          console.log('🎯 [开发模式] 加载测试工具...')
           
           // 动态加载markdown测试工具
           import('@/utils/markdownTest.js').then(markdownTest => {
@@ -740,6 +754,16 @@ function example() {
             console.log('   使用 window.markdownTest 访问所有测试功能')
           }).catch(error => {
             console.warn('⚠️ [开发模式] markdown测试工具加载失败:', error)
+          })
+
+          // 动态加载文字选择测试工具
+          import('@/utils/selectionTest.js').then(selectionTestModule => {
+            const selectionTest = selectionTestModule.default
+            selectionTest.init(this.mindMap)
+            console.log('✅ [开发模式] 文字选择测试工具加载完成')
+            console.log('   使用 window.selectionTest 访问所有测试功能')
+          }).catch(error => {
+            console.warn('⚠️ [开发模式] 文字选择测试工具加载失败:', error)
           })
         }
       }
@@ -753,6 +777,7 @@ function example() {
 
       // 移除AI相关事件监听
       this.mindMap.off('node_text_edit_end', this.handleNodeTextEditEnd)
+      this.mindMap.off('generate_ai_response_for_selection')
       
       // 清理AI相关数据（来自aiResponseMixin）
       if (this.cleanupAIData) {
