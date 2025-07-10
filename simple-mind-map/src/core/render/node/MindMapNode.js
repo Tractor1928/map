@@ -332,18 +332,22 @@ class MindMapNode {
     return changed
   }
 
-  // 处理文字选择事件，创建提问节点
+  // 处理文字选择事件，显示问号图标
   handleTextSelection(e) {
     // 延迟执行，确保选择已完成
     setTimeout(() => {
       try {
         const selection = window.getSelection()
         if (!selection || selection.rangeCount === 0) {
+          // 没有选择时隐藏问号图标
+          this.hideQuestionIcon()
           return
         }
         
         const selectedText = selection.toString().trim()
         if (!selectedText || selectedText.length < 2) {
+          // 选择的文字太短时隐藏问号图标
+          this.hideQuestionIcon()
           return
         }
         
@@ -358,11 +362,8 @@ class MindMapNode {
         console.log('🎯 [文字选择] 检测到选中文字:', selectedText)
         console.log('🎯 [文字选择] 当前节点:', this.getData('text'))
         
-        // 创建提问节点
-        this.createQuestionNodeFromSelection(selectedText)
-        
-        // 清除选择，避免界面混乱
-        selection.removeAllRanges()
+        // 显示问号图标而不是立即创建节点
+        this.showQuestionIcon(selectedText, range)
         
       } catch (error) {
         console.error('🎯 [文字选择] 处理文字选择时出错:', error)
@@ -399,6 +400,163 @@ class MindMapNode {
       
     } catch (error) {
       console.error('🤔 [提问节点] 创建提问节点失败:', error)
+    }
+  }
+
+  // 显示问号图标
+  showQuestionIcon(selectedText, range) {
+    try {
+      console.log('❓ [问号图标] 显示问号图标:', selectedText)
+      
+      // 先隐藏之前的图标
+      this.hideQuestionIcon()
+      
+      // 保存选中的文字和范围
+      this.selectedTextForQuestion = selectedText
+      this.selectedRange = range
+      
+      // 获取选择范围的位置信息
+      const rect = range.getBoundingClientRect()
+      const nodeRect = this.group.node.getBoundingClientRect()
+      
+      // 创建问号图标
+      this.questionIcon = this.group.circle(24)
+        .fill('#1890ff')
+        .stroke({ color: '#ffffff', width: 2 })
+        .addClass('smm-question-icon')
+        .css({
+          cursor: 'pointer',
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+        })
+      
+      // 添加问号文字
+      this.questionIconText = this.group.text('?')
+        .font({
+          size: 16,
+          family: 'Arial, sans-serif',
+          weight: 'bold'
+        })
+        .fill('#ffffff')
+        .addClass('smm-question-icon-text')
+        .css({
+          cursor: 'pointer',
+          userSelect: 'none',
+          pointerEvents: 'none'
+        })
+      
+      // 计算图标位置（在选择区域右侧）
+      const iconX = rect.right - nodeRect.left + 10
+      const iconY = rect.top - nodeRect.top + (rect.height / 2) - 12
+      
+      this.questionIcon.move(iconX, iconY)
+      this.questionIconText.move(iconX + 8, iconY + 6)
+      
+      // 绑定点击事件
+      this.questionIcon.on('click', (e) => {
+        e.stopPropagation()
+        this.onQuestionIconClick()
+      })
+      
+      // 添加动画效果
+      this.questionIcon.animate(200, 0).scale(1.1).animate(200, 0).scale(1)
+      
+      console.log('❓ [问号图标] 问号图标显示完成')
+      
+      // 设置全局点击监听，点击其他地方时隐藏图标
+      this.setupGlobalClickListener()
+      
+    } catch (error) {
+      console.error('❓ [问号图标] 显示问号图标失败:', error)
+    }
+  }
+
+  // 隐藏问号图标
+  hideQuestionIcon() {
+    try {
+      if (this.questionIcon) {
+        this.questionIcon.remove()
+        this.questionIcon = null
+      }
+      
+      if (this.questionIconText) {
+        this.questionIconText.remove()
+        this.questionIconText = null
+      }
+      
+      // 清理选择数据
+      this.selectedTextForQuestion = null
+      this.selectedRange = null
+      
+      // 移除全局点击监听
+      this.removeGlobalClickListener()
+      
+      console.log('❓ [问号图标] 问号图标已隐藏')
+    } catch (error) {
+      console.error('❓ [问号图标] 隐藏问号图标失败:', error)
+    }
+  }
+
+  // 问号图标点击事件
+  onQuestionIconClick() {
+    try {
+      console.log('🎯 [问号点击] 用户点击了问号图标')
+      
+      if (!this.selectedTextForQuestion) {
+        console.warn('🎯 [问号点击] 没有保存的选中文字')
+        return
+      }
+      
+      // 创建提问节点
+      this.createQuestionNodeFromSelection(this.selectedTextForQuestion)
+      
+      // 隐藏问号图标
+      this.hideQuestionIcon()
+      
+      // 清除文字选择
+      const selection = window.getSelection()
+      if (selection) {
+        selection.removeAllRanges()
+      }
+      
+      console.log('🎯 [问号点击] 提问节点创建完成')
+      
+    } catch (error) {
+      console.error('🎯 [问号点击] 处理点击事件失败:', error)
+    }
+  }
+
+  // 设置全局点击监听
+  setupGlobalClickListener() {
+    this.globalClickHandler = (e) => {
+      // 如果点击的不是问号图标或其父节点，则隐藏图标
+      if (!e.target.closest('.smm-question-icon') && 
+          !e.target.closest('.smm-question-icon-text')) {
+        this.hideQuestionIcon()
+      }
+    }
+    
+    document.addEventListener('click', this.globalClickHandler, true)
+    
+    // ESC键也可以取消
+    this.escKeyHandler = (e) => {
+      if (e.key === 'Escape') {
+        this.hideQuestionIcon()
+      }
+    }
+    
+    document.addEventListener('keydown', this.escKeyHandler)
+  }
+
+  // 移除全局点击监听
+  removeGlobalClickListener() {
+    if (this.globalClickHandler) {
+      document.removeEventListener('click', this.globalClickHandler, true)
+      this.globalClickHandler = null
+    }
+    
+    if (this.escKeyHandler) {
+      document.removeEventListener('keydown', this.escKeyHandler)
+      this.escKeyHandler = null
     }
   }
 
@@ -840,6 +998,10 @@ class MindMapNode {
 
   // 销毁节点，不但会从画布删除，而且原节点直接置空，后续无法再插回画布
   destroy() {
+    // 清理问号图标和事件监听器
+    this.hideQuestionIcon()
+    this.removeGlobalClickListener()
+    
     this.removeLine()
     if (this.parent) {
       this.parent.removeLine()

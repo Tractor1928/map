@@ -76,13 +76,36 @@ class SelectionTestHelper {
         return
       }
 
-      console.log('🤖 [模拟测试] 找到目标节点，直接触发提问节点创建...')
+      console.log('🤖 [模拟测试] 找到目标节点，模拟显示问号图标...')
       
-      // 直接调用创建提问节点的方法
-      if (targetNode.createQuestionNodeFromSelection) {
-        targetNode.createQuestionNodeFromSelection(selectedText)
+      // 创建一个模拟的选择范围
+      const mockRange = {
+        getBoundingClientRect: () => ({
+          top: 100,
+          left: 100,
+          right: 200,
+          bottom: 120,
+          width: 100,
+          height: 20
+        })
+      }
+      
+      // 调用显示问号图标的方法
+      if (targetNode.showQuestionIcon) {
+        targetNode.showQuestionIcon(selectedText, mockRange)
+        
+        console.log('🤖 [模拟测试] 问号图标已显示，3秒后自动点击...')
+        
+        // 3秒后自动点击问号图标
+        setTimeout(() => {
+          if (targetNode.onQuestionIconClick) {
+            console.log('🤖 [模拟测试] 自动点击问号图标')
+            targetNode.onQuestionIconClick()
+          }
+        }, 3000)
+        
       } else {
-        console.warn('🤖 [模拟测试] 节点不支持创建提问节点方法')
+        console.warn('🤖 [模拟测试] 节点不支持显示问号图标方法')
       }
 
     } catch (error) {
@@ -176,19 +199,26 @@ class SelectionTestHelper {
     console.log('📖 [使用指南] 文字选择生成提问节点功能:')
     console.log('')
     console.log('🎯 功能说明:')
-    console.log('   选中节点中的任意文字，自动创建包含该文字内容的提问节点，并生成AI回答')
+    console.log('   选中节点中的任意文字，显示问号图标，点击图标创建提问节点并生成AI回答')
     console.log('')
     console.log('🔧 使用方法:')
-    console.log('   1. 在思维导图节点中用鼠标选择文字')
-    console.log('   2. 松开鼠标，系统自动创建提问节点')
-    console.log('   3. AI自动为提问节点生成回答')
+    console.log('   1. 在思维导图节点中用鼠标选择文字（2个字符以上）')
+    console.log('   2. 松开鼠标，在选中文字旁边显示蓝色问号图标')
+    console.log('   3. 点击问号图标创建提问节点')
+    console.log('   4. AI自动为提问节点生成回答')
+    console.log('')
+    console.log('❌ 取消选择:')
+    console.log('   • 点击其他地方取消选择')
+    console.log('   • 按ESC键取消选择')
+    console.log('   • 选择其他文字会替换当前选择')
     console.log('')
     console.log('💡 测试命令:')
-    console.log('   window.selectionTest.quickTest() - 快速测试')
+    console.log('   window.selectionTest.quickTest() - 快速测试（自动演示完整流程）')
     console.log('   window.selectionTest.showAllNodes() - 显示所有节点')
     console.log('   window.selectionTest.cleanup() - 清理测试数据')
     console.log('')
     console.log('🎨 视觉效果:')
+    console.log('   • 问号图标: 蓝色圆形图标，带有悬停动画')
     console.log('   • 提问节点: 蓝色虚线边框，蓝色文字')
     console.log('   • AI回答节点: 带有🤖标识')
   }

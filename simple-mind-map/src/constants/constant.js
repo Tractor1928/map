@@ -1,4 +1,4 @@
-// 常量
+ // 常量
 export const CONSTANTS = {
   CHANGE_THEME: 'changeTheme',
   CHANGE_LAYOUT: 'changeLayout',
@@ -286,6 +286,23 @@ export const cssContent = `
   .smm-node[data-is-question="true"] .smm-text-node-wrap {
     color: #1890ff !important;
     font-weight: 500 !important;
+  }
+
+  /* 问号图标样式 */
+  .smm-question-icon {
+    z-index: 1000;
+    transition: all 0.2s ease;
+  }
+
+  .smm-question-icon:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  }
+
+  .smm-question-icon-text {
+    z-index: 1001;
+    user-select: none;
+    pointer-events: none;
   }
 `
 
