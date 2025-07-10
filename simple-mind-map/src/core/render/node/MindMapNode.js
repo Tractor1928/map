@@ -416,11 +416,22 @@ class MindMapNode {
       this.selectedRange = range
       
       // 获取选择范围的位置信息
-      const rect = range.getBoundingClientRect()
       const nodeRect = this.group.node.getBoundingClientRect()
       
+      // 创建一个临时range来获取选择结束位置
+      const endRange = document.createRange()
+      endRange.setStart(range.endContainer, range.endOffset)
+      endRange.setEnd(range.endContainer, range.endOffset)
+      const endRect = endRange.getBoundingClientRect()
+      endRange.detach()
+      
+      // 计算图标位置（在选择结束位置的右上方）
+      const iconX = endRect.left - nodeRect.left + 5
+      const iconY = endRect.top - nodeRect.top - 30
+      const iconSize = 24
+      
       // 创建问号图标
-      this.questionIcon = this.group.circle(24)
+      this.questionIcon = this.group.circle(iconSize)
         .fill('#1890ff')
         .stroke({ color: '#ffffff', width: 2 })
         .addClass('smm-question-icon')
@@ -428,8 +439,9 @@ class MindMapNode {
           cursor: 'pointer',
           filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
         })
+        .move(iconX, iconY)
       
-      // 添加问号文字
+      // 添加问号文字（居中在圆形图标内）
       this.questionIconText = this.group.text('?')
         .font({
           size: 16,
@@ -443,13 +455,11 @@ class MindMapNode {
           userSelect: 'none',
           pointerEvents: 'none'
         })
-      
-      // 计算图标位置（在选择区域右侧）
-      const iconX = rect.right - nodeRect.left + 10
-      const iconY = rect.top - nodeRect.top + (rect.height / 2) - 12
-      
-      this.questionIcon.move(iconX, iconY)
-      this.questionIconText.move(iconX + 8, iconY + 6)
+        .attr({
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central'
+        })
+        .move(iconX + iconSize / 2 - 5, iconY + iconSize / 2 - 9)
       
       // 绑定点击事件
       this.questionIcon.on('click', (e) => {
