@@ -252,9 +252,9 @@ export const cssContent = `
   }
 
   /* 关键修复：使SVG文本可选择 */
-  .smm-node svg text,
+  .smm-node svg text:not(.smm-question-icon-text),
   .smm-node text.smm-text-node-wrap,
-  .smm-node tspan,
+  .smm-node tspan:not(.smm-question-icon-text),
   .smm-node foreignObject,
   .smm-node foreignObject * {
     user-select: text !important;
@@ -297,7 +297,16 @@ export const cssContent = `
   .smm-question-icon-text {
     z-index: 1001;
     user-select: none;
-    pointer-events: none;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+  
+  /* 超高优先级：确保问号图标文字永远是手型光标 */
+  .smm-node .smm-question-icon-text,
+  text.smm-question-icon-text,
+  .smm-question-icon-text * {
+    cursor: pointer !important;
+    pointer-events: auto !important;
   }
 `
 

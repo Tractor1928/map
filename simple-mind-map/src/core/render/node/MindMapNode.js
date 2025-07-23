@@ -334,40 +334,19 @@ class MindMapNode {
 
   // 处理文字选择事件，显示问号图标
   handleTextSelection(e) {
-    console.log('🎯 [文字选择] 文字选择事件触发:', {
-      事件类型: e.type,
-      鼠标按键: e.which || e.button,
-      当前节点: this.getData('text'),
-      时间戳: Date.now()
-    })
-    
     // 延迟执行，确保选择已完成
     setTimeout(() => {
       try {
         const selection = window.getSelection()
-        console.log('🎯 [文字选择] Selection状态:', {
-          selection,
-          rangeCount: selection ? selection.rangeCount : 0,
-          selectionType: selection ? selection.type : 'none',
-          isCollapsed: selection ? selection.isCollapsed : 'unknown'
-        })
         
         if (!selection || selection.rangeCount === 0) {
-          console.log('🎯 [文字选择] 没有选择，隐藏问号图标')
           this.hideQuestionIcon()
           return
         }
         
         const selectedText = selection.toString().trim()
-        console.log('🎯 [文字选择] 选中文字分析:', {
-          原始文字: `"${selection.toString()}"`,
-          清理后文字: `"${selectedText}"`,
-          文字长度: selectedText.length,
-          满足长度要求: selectedText.length >= 2
-        })
         
         if (!selectedText || selectedText.length < 2) {
-          console.log('🎯 [文字选择] 选择的文字太短，隐藏问号图标')
           this.hideQuestionIcon()
           return
         }
@@ -378,21 +357,9 @@ class MindMapNode {
         const isInCurrentNode = nodeElement.contains(range.commonAncestorContainer) || 
                                nodeElement === range.commonAncestorContainer
         
-        console.log('🎯 [文字选择] 节点包含检查:', {
-          当前节点元素: nodeElement,
-          选择的公共祖先: range.commonAncestorContainer,
-          选择是否在当前节点内: isInCurrentNode,
-          commonAncestorContainer类型: range.commonAncestorContainer.nodeType === Node.TEXT_NODE ? 
-            'TextNode' : range.commonAncestorContainer.tagName || range.commonAncestorContainer.nodeName
-        })
-        
         if (!isInCurrentNode) {
-          console.log('🎯 [文字选择] 选择不在当前节点内，忽略')
           return
         }
-        
-        console.log('🎯 [文字选择] 检测到有效选中文字:', selectedText)
-        console.log('🎯 [文字选择] 当前节点:', this.getData('text'))
         
         // 获取鼠标位置信息
         const mousePosition = {
@@ -402,13 +369,11 @@ class MindMapNode {
           pageY: e.pageY
         }
         
-        console.log('🎯 [文字选择] 鼠标释放位置:', mousePosition)
-        
         // 显示问号图标而不是立即创建节点，使用鼠标位置
         this.showQuestionIcon(selectedText, range, mousePosition)
         
       } catch (error) {
-        console.error('🎯 [文字选择] 处理文字选择时出错:', error)
+        console.error('处理文字选择时出错:', error)
       }
     }, 50)
   }
@@ -416,10 +381,8 @@ class MindMapNode {
   // 从选中文字创建提问节点
   createQuestionNodeFromSelection(selectedText) {
     try {
-      console.log('🤔 [提问节点] 开始创建提问节点:', selectedText)
-      
-             // 生成唯一ID（使用simple-mind-map的工具函数）
-       const uid = 'question_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+      // 生成唯一ID（使用simple-mind-map的工具函数）
+      const uid = 'question_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
       
       // 创建子节点数据
       const questionNodeData = {
@@ -428,12 +391,8 @@ class MindMapNode {
         uid: uid
       }
       
-      console.log('🤔 [提问节点] 节点数据:', questionNodeData)
-      
       // 使用思维导图API创建子节点
       this.mindMap.execCommand('INSERT_CHILD_NODE', false, [this], questionNodeData, [])
-      
-      console.log('🤔 [提问节点] 提问节点创建完成')
       
       // 延迟查找创建的节点并触发AI回答
       setTimeout(() => {
@@ -441,23 +400,13 @@ class MindMapNode {
       }, 100)
       
     } catch (error) {
-      console.error('🤔 [提问节点] 创建提问节点失败:', error)
+      console.error('创建提问节点失败:', error)
     }
   }
 
   // 显示问号图标
   showQuestionIcon(selectedText, range, mousePosition) {
     try {
-      console.log('❓ [问号图标] 显示问号图标:', selectedText)
-      console.log('❓ [问号图标] 原始range信息:', {
-        startContainer: range.startContainer,
-        startOffset: range.startOffset,
-        endContainer: range.endContainer,
-        endOffset: range.endOffset,
-        collapsed: range.collapsed,
-        commonAncestorContainer: range.commonAncestorContainer
-      })
-      
       // 先隐藏之前的图标
       this.hideQuestionIcon()
       
@@ -465,62 +414,13 @@ class MindMapNode {
       this.selectedTextForQuestion = selectedText
       this.selectedRange = range
       
-      // 获取页面滚动和缩放信息
-      const pageScrollInfo = {
-        scrollX: window.pageXOffset || document.documentElement.scrollLeft,
-        scrollY: window.pageYOffset || document.documentElement.scrollTop,
-        innerWidth: window.innerWidth,
-        innerHeight: window.innerHeight,
-        devicePixelRatio: window.devicePixelRatio
-      }
-      
-      // 获取思维导图的变换信息
-      const drawTransform = this.mindMap.draw.transform()
-      
-      console.log('❓ [问号图标] 页面和变换信息:', {
-        页面滚动: pageScrollInfo,
-        思维导图变换: drawTransform,
-        画布尺寸: {
-          width: this.mindMap.width,
-          height: this.mindMap.height
-        }
-      })
-      
-      // 获取选择范围的位置信息
-      const nodeRect = this.group.node.getBoundingClientRect()
-      console.log('❓ [问号图标] 节点位置信息:', {
-        nodeRect,
-        nodeDimensions: {
-          width: this.width,
-          height: this.height,
-          left: this.left,
-          top: this.top
-        }
-      })
-      
-      // 获取原始选择范围的位置（仅用于调试）
-      const originalRangeRect = range.getBoundingClientRect()
-      console.log('❓ [问号图标] 原始选择范围位置:', originalRangeRect)
-      
-      // 确定使用哪种位置计算方式
-      let useMousePosition = false
-      if (mousePosition && mousePosition.clientX !== undefined && mousePosition.clientY !== undefined) {
-        useMousePosition = true
-        console.log('❓ [问号图标] 使用鼠标释放位置:', {
-          mousePosition,
-          说明: '使用鼠标释放位置作为图标定位基准'
-        })
-      } else {
-        console.log('❓ [问号图标] 鼠标位置无效，回退到文字选择结束位置')
-      }
-      
       // 获取变换参数
       const drawTransformInverse = this.mindMap.draw.transform()
       const { scaleX, scaleY, translateX, translateY } = drawTransformInverse
       
       let canvasX, canvasY
       
-      if (useMousePosition) {
+      if (mousePosition && mousePosition.clientX !== undefined && mousePosition.clientY !== undefined) {
         // 使用鼠标位置
         canvasX = (mousePosition.clientX - translateX) / scaleX
         canvasY = (mousePosition.clientY - translateY) / scaleY
@@ -534,12 +434,6 @@ class MindMapNode {
         
         canvasX = (endRect.left - translateX) / scaleX
         canvasY = (endRect.top - translateY) / scaleY
-        
-        console.log('❓ [问号图标] 使用文字选择结束位置:', {
-          endRect,
-          canvasX,
-          canvasY
-        })
       }
       
       // 计算图标位置（相对于节点，在目标位置的右上方）
@@ -554,43 +448,8 @@ class MindMapNode {
       const maxY = this.height - 5
       
       // 应用边界限制
-      const originalIconX = iconX
-      const originalIconY = iconY
       iconX = Math.max(minX, Math.min(maxX, iconX))
       iconY = Math.max(minY, Math.min(maxY, iconY))
-      
-      console.log('❓ [问号图标] 边界检查:', {
-        原始位置: { x: originalIconX, y: originalIconY },
-        边界限制: { minX, maxX, minY, maxY },
-        最终位置: { x: iconX, y: iconY },
-        是否调整: originalIconX !== iconX || originalIconY !== iconY
-      })
-      
-      console.log('❓ [问号图标] 坐标转换详情:', {
-        使用的定位方式: useMousePosition ? '鼠标释放位置' : '文字选择结束位置',
-        变换参数: {
-          scaleX, scaleY, translateX, translateY
-        },
-        画布坐标: {
-          canvasX,
-          canvasY
-        },
-        节点位置: {
-          node_left: this.left,
-          node_top: this.top
-        }
-      })
-      
-      console.log('❓ [问号图标] 位置计算:', {
-        计算公式: {
-          iconX: `${canvasX} - ${this.left} + 5 = ${iconX}`,
-          iconY: `${canvasY} - ${this.top} - 30 = ${iconY}`
-        },
-        最终位置: { iconX, iconY, iconSize },
-        相对于节点的位置: `(${iconX}, ${iconY})`,
-        节点尺寸参考: `节点宽度: ${this.width}, 节点高度: ${this.height}`,
-        定位说明: useMousePosition ? '基于鼠标释放位置的右上方' : '基于文字选择结束位置的右上方'
-      })
       
       // 创建问号图标
       this.questionIcon = this.group.circle(iconSize)
@@ -602,12 +461,6 @@ class MindMapNode {
           filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
         })
         .move(iconX, iconY)
-      
-      console.log('❓ [问号图标] 图标创建完成:', {
-        圆圈位置: { x: iconX, y: iconY },
-        圆圈大小: iconSize,
-        图标元素: this.questionIcon.node
-      })
       
       // 添加问号文字（居中在圆形图标内）
       const textX = iconX + iconSize / 2 - 5
@@ -621,22 +474,21 @@ class MindMapNode {
         })
         .fill('#ffffff')
         .addClass('smm-question-icon-text')
-        .css({
-          cursor: 'pointer',
-          userSelect: 'none',
-          pointerEvents: 'none'
-        })
         .attr({
           'text-anchor': 'middle',
-          'dominant-baseline': 'central'
+          'dominant-baseline': 'central',
+          'cursor': 'pointer',
+          'pointer-events': 'auto'
+        })
+        .css({
+          userSelect: 'none'
         })
         .move(textX, textY)
       
-      console.log('❓ [问号图标] 文字创建完成:', {
-        文字位置: { x: textX, y: textY },
-        文字计算: `x: ${iconX} + ${iconSize}/2 - 5 = ${textX}, y: ${iconY} + ${iconSize}/2 - 9 = ${textY}`,
-        文字元素: this.questionIconText.node
-      })
+      // 直接设置DOM元素的内联样式，确保最高优先级
+      this.questionIconText.node.style.cursor = 'pointer'
+      this.questionIconText.node.style.pointerEvents = 'auto'
+      this.questionIcon.node.style.cursor = 'pointer'
       
       // 绑定点击事件
       this.questionIcon.on('click', (e) => {
@@ -644,16 +496,66 @@ class MindMapNode {
         this.onQuestionIconClick()
       })
       
+      // 给问号文字也绑定相同的点击事件
+      this.questionIconText.on('click', (e) => {
+        e.stopPropagation()
+        this.onQuestionIconClick()
+      })
+      
+      // 强制设置问号图标的鼠标样式
+      this.questionIcon.on('mouseover', (e) => {
+        e.target.style.cursor = 'pointer'
+        this.questionIcon.css({ cursor: 'pointer' })
+      })
+      
+      this.questionIconText.on('mouseover', (e) => {
+        e.stopPropagation()
+        e.target.style.cursor = 'pointer'
+        this.questionIconText.css({ cursor: 'pointer' })
+        // 同时也设置父组的cursor
+        this.group.css({ cursor: 'pointer' })
+        
+        // 🔍 调试：检查问号文字的cursor样式
+        console.log('🔍 [CURSOR调试] 问号文字mouseover时的样式检查:')
+        const textElement = this.questionIconText.node
+        const computedStyle = window.getComputedStyle(textElement)
+        console.log('- DOM元素:', textElement)
+        console.log('- 元素类名:', textElement.className.baseVal || textElement.className)
+        console.log('- 内联样式cursor:', textElement.style.cursor)
+        console.log('- 计算后样式cursor:', computedStyle.cursor)
+        console.log('- pointer-events:', computedStyle.pointerEvents)
+        console.log('- 所有CSS规则:')
+        
+        // 遍历所有匹配的CSS规则
+        const sheets = document.styleSheets
+        for (let i = 0; i < sheets.length; i++) {
+          try {
+            const rules = sheets[i].cssRules || sheets[i].rules
+            for (let j = 0; j < rules.length; j++) {
+              const rule = rules[j]
+              if (rule.selectorText && textElement.matches && textElement.matches(rule.selectorText)) {
+                console.log(`  规则: ${rule.selectorText} -> cursor: ${rule.style.cursor || 'inherit'}`)
+              }
+            }
+          } catch (e) {
+            // 跨域CSS无法访问
+          }
+        }
+      })
+      
+      this.questionIconText.on('mouseout', (e) => {
+        // 恢复父组的默认cursor
+        this.group.css({ cursor: 'default' })
+      })
+      
       // 添加动画效果
       this.questionIcon.animate(200, 0).scale(1.1).animate(200, 0).scale(1)
-      
-      console.log('❓ [问号图标] 问号图标显示完成')
       
       // 设置全局点击监听，点击其他地方时隐藏图标
       this.setupGlobalClickListener()
       
     } catch (error) {
-      console.error('❓ [问号图标] 显示问号图标失败:', error)
+      console.error('显示问号图标失败:', error)
     }
   }
 
@@ -677,19 +579,15 @@ class MindMapNode {
       // 移除全局点击监听
       this.removeGlobalClickListener()
       
-      console.log('❓ [问号图标] 问号图标已隐藏')
     } catch (error) {
-      console.error('❓ [问号图标] 隐藏问号图标失败:', error)
+      console.error('隐藏问号图标失败:', error)
     }
   }
 
   // 问号图标点击事件
   onQuestionIconClick() {
     try {
-      console.log('🎯 [问号点击] 用户点击了问号图标')
-      
       if (!this.selectedTextForQuestion) {
-        console.warn('🎯 [问号点击] 没有保存的选中文字')
         return
       }
       
@@ -705,10 +603,8 @@ class MindMapNode {
         selection.removeAllRanges()
       }
       
-      console.log('🎯 [问号点击] 提问节点创建完成')
-      
     } catch (error) {
-      console.error('🎯 [问号点击] 处理点击事件失败:', error)
+      console.error('处理点击事件失败:', error)
     }
   }
 
@@ -750,8 +646,6 @@ class MindMapNode {
   // 查找创建的提问节点并触发AI回答
   findAndTriggerAIResponse(questionNodeUid, questionText) {
     try {
-      console.log('🔍 [AI触发] 查找提问节点:', questionNodeUid)
-      
       // 查找创建的提问节点
       let questionNode = null
       
@@ -768,17 +662,12 @@ class MindMapNode {
         }
       }
       
-      console.log('🔍 [AI触发] 找到提问节点:', questionNode)
-      
       if (questionNode) {
         // 触发AI回答生成（通过mindMap事件）
         this.mindMap.emit('generate_ai_response_for_selection', questionNode, questionText)
-        console.log('🔍 [AI触发] 已触发AI回答生成事件')
-      } else {
-        console.warn('🔍 [AI触发] 未找到创建的提问节点')
       }
     } catch (error) {
-      console.error('🔍 [AI触发] 查找提问节点或触发AI回答失败:', error)
+      console.error('查找提问节点或触发AI回答失败:', error)
     }
   }
 
@@ -1097,6 +986,10 @@ class MindMapNode {
         // 为文本区域设置文本光标
         this.group.on('mouseover', (e) => {
           const target = e.target
+          // 检查是否是问号图标文字，如果是则不修改cursor
+          if (target.classList && target.classList.contains('smm-question-icon-text')) {
+            return
+          }
           if (target.tagName === 'text' || target.tagName === 'tspan' || 
               target.closest('.smm-text-node-wrap') || 
               target.closest('foreignObject')) {
