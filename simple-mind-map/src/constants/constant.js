@@ -294,11 +294,6 @@ export const cssContent = `
     transition: all 0.2s ease;
   }
 
-  .smm-question-icon:hover {
-    transform: scale(1.1);
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-  }
-
   .smm-question-icon-text {
     z-index: 1001;
     user-select: none;
