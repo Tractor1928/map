@@ -92,6 +92,7 @@ class SelectionTestHelper {
       
       // 调用显示问号图标的方法
       if (targetNode.showQuestionIcon) {
+        // 在测试环境中，不传递鼠标位置参数，让其回退到文字选择结束位置
         targetNode.showQuestionIcon(selectedText, mockRange)
         
         console.log('🤖 [模拟测试] 问号图标已显示，3秒后自动点击...')

@@ -334,19 +334,40 @@ class MindMapNode {
 
   // 处理文字选择事件，显示问号图标
   handleTextSelection(e) {
+    console.log('🎯 [文字选择] 文字选择事件触发:', {
+      事件类型: e.type,
+      鼠标按键: e.which || e.button,
+      当前节点: this.getData('text'),
+      时间戳: Date.now()
+    })
+    
     // 延迟执行，确保选择已完成
     setTimeout(() => {
       try {
         const selection = window.getSelection()
+        console.log('🎯 [文字选择] Selection状态:', {
+          selection,
+          rangeCount: selection ? selection.rangeCount : 0,
+          selectionType: selection ? selection.type : 'none',
+          isCollapsed: selection ? selection.isCollapsed : 'unknown'
+        })
+        
         if (!selection || selection.rangeCount === 0) {
-          // 没有选择时隐藏问号图标
+          console.log('🎯 [文字选择] 没有选择，隐藏问号图标')
           this.hideQuestionIcon()
           return
         }
         
         const selectedText = selection.toString().trim()
+        console.log('🎯 [文字选择] 选中文字分析:', {
+          原始文字: `"${selection.toString()}"`,
+          清理后文字: `"${selectedText}"`,
+          文字长度: selectedText.length,
+          满足长度要求: selectedText.length >= 2
+        })
+        
         if (!selectedText || selectedText.length < 2) {
-          // 选择的文字太短时隐藏问号图标
+          console.log('🎯 [文字选择] 选择的文字太短，隐藏问号图标')
           this.hideQuestionIcon()
           return
         }
@@ -354,16 +375,37 @@ class MindMapNode {
         // 检查选中的文字是否在当前节点内
         const range = selection.getRangeAt(0)
         const nodeElement = this.group.node
-        if (!nodeElement.contains(range.commonAncestorContainer) && 
-            nodeElement !== range.commonAncestorContainer) {
+        const isInCurrentNode = nodeElement.contains(range.commonAncestorContainer) || 
+                               nodeElement === range.commonAncestorContainer
+        
+        console.log('🎯 [文字选择] 节点包含检查:', {
+          当前节点元素: nodeElement,
+          选择的公共祖先: range.commonAncestorContainer,
+          选择是否在当前节点内: isInCurrentNode,
+          commonAncestorContainer类型: range.commonAncestorContainer.nodeType === Node.TEXT_NODE ? 
+            'TextNode' : range.commonAncestorContainer.tagName || range.commonAncestorContainer.nodeName
+        })
+        
+        if (!isInCurrentNode) {
+          console.log('🎯 [文字选择] 选择不在当前节点内，忽略')
           return
         }
         
-        console.log('🎯 [文字选择] 检测到选中文字:', selectedText)
+        console.log('🎯 [文字选择] 检测到有效选中文字:', selectedText)
         console.log('🎯 [文字选择] 当前节点:', this.getData('text'))
         
-        // 显示问号图标而不是立即创建节点
-        this.showQuestionIcon(selectedText, range)
+        // 获取鼠标位置信息
+        const mousePosition = {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          pageX: e.pageX,
+          pageY: e.pageY
+        }
+        
+        console.log('🎯 [文字选择] 鼠标释放位置:', mousePosition)
+        
+        // 显示问号图标而不是立即创建节点，使用鼠标位置
+        this.showQuestionIcon(selectedText, range, mousePosition)
         
       } catch (error) {
         console.error('🎯 [文字选择] 处理文字选择时出错:', error)
@@ -404,9 +446,17 @@ class MindMapNode {
   }
 
   // 显示问号图标
-  showQuestionIcon(selectedText, range) {
+  showQuestionIcon(selectedText, range, mousePosition) {
     try {
       console.log('❓ [问号图标] 显示问号图标:', selectedText)
+      console.log('❓ [问号图标] 原始range信息:', {
+        startContainer: range.startContainer,
+        startOffset: range.startOffset,
+        endContainer: range.endContainer,
+        endOffset: range.endOffset,
+        collapsed: range.collapsed,
+        commonAncestorContainer: range.commonAncestorContainer
+      })
       
       // 先隐藏之前的图标
       this.hideQuestionIcon()
@@ -415,20 +465,132 @@ class MindMapNode {
       this.selectedTextForQuestion = selectedText
       this.selectedRange = range
       
+      // 获取页面滚动和缩放信息
+      const pageScrollInfo = {
+        scrollX: window.pageXOffset || document.documentElement.scrollLeft,
+        scrollY: window.pageYOffset || document.documentElement.scrollTop,
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio
+      }
+      
+      // 获取思维导图的变换信息
+      const drawTransform = this.mindMap.draw.transform()
+      
+      console.log('❓ [问号图标] 页面和变换信息:', {
+        页面滚动: pageScrollInfo,
+        思维导图变换: drawTransform,
+        画布尺寸: {
+          width: this.mindMap.width,
+          height: this.mindMap.height
+        }
+      })
+      
       // 获取选择范围的位置信息
       const nodeRect = this.group.node.getBoundingClientRect()
+      console.log('❓ [问号图标] 节点位置信息:', {
+        nodeRect,
+        nodeDimensions: {
+          width: this.width,
+          height: this.height,
+          left: this.left,
+          top: this.top
+        }
+      })
       
-      // 创建一个临时range来获取选择结束位置
-      const endRange = document.createRange()
-      endRange.setStart(range.endContainer, range.endOffset)
-      endRange.setEnd(range.endContainer, range.endOffset)
-      const endRect = endRange.getBoundingClientRect()
-      endRange.detach()
+      // 获取原始选择范围的位置（仅用于调试）
+      const originalRangeRect = range.getBoundingClientRect()
+      console.log('❓ [问号图标] 原始选择范围位置:', originalRangeRect)
       
-      // 计算图标位置（在选择结束位置的右上方）
-      const iconX = endRect.left - nodeRect.left + 5
-      const iconY = endRect.top - nodeRect.top - 30
+      // 确定使用哪种位置计算方式
+      let useMousePosition = false
+      if (mousePosition && mousePosition.clientX !== undefined && mousePosition.clientY !== undefined) {
+        useMousePosition = true
+        console.log('❓ [问号图标] 使用鼠标释放位置:', {
+          mousePosition,
+          说明: '使用鼠标释放位置作为图标定位基准'
+        })
+      } else {
+        console.log('❓ [问号图标] 鼠标位置无效，回退到文字选择结束位置')
+      }
+      
+      // 获取变换参数
+      const drawTransformInverse = this.mindMap.draw.transform()
+      const { scaleX, scaleY, translateX, translateY } = drawTransformInverse
+      
+      let canvasX, canvasY
+      
+      if (useMousePosition) {
+        // 使用鼠标位置
+        canvasX = (mousePosition.clientX - translateX) / scaleX
+        canvasY = (mousePosition.clientY - translateY) / scaleY
+      } else {
+        // 回退到文字选择结束位置
+        const endRange = document.createRange()
+        endRange.setStart(range.endContainer, range.endOffset)
+        endRange.setEnd(range.endContainer, range.endOffset)
+        const endRect = endRange.getBoundingClientRect()
+        endRange.detach()
+        
+        canvasX = (endRect.left - translateX) / scaleX
+        canvasY = (endRect.top - translateY) / scaleY
+        
+        console.log('❓ [问号图标] 使用文字选择结束位置:', {
+          endRect,
+          canvasX,
+          canvasY
+        })
+      }
+      
+      // 计算图标位置（相对于节点，在目标位置的右上方）
+      let iconX = canvasX - this.left + 5
+      let iconY = canvasY - this.top - 30
       const iconSize = 24
+      
+      // 边界检查，确保图标在节点范围内
+      const minX = 5
+      const maxX = this.width - iconSize - 5
+      const minY = -iconSize - 5
+      const maxY = this.height - 5
+      
+      // 应用边界限制
+      const originalIconX = iconX
+      const originalIconY = iconY
+      iconX = Math.max(minX, Math.min(maxX, iconX))
+      iconY = Math.max(minY, Math.min(maxY, iconY))
+      
+      console.log('❓ [问号图标] 边界检查:', {
+        原始位置: { x: originalIconX, y: originalIconY },
+        边界限制: { minX, maxX, minY, maxY },
+        最终位置: { x: iconX, y: iconY },
+        是否调整: originalIconX !== iconX || originalIconY !== iconY
+      })
+      
+      console.log('❓ [问号图标] 坐标转换详情:', {
+        使用的定位方式: useMousePosition ? '鼠标释放位置' : '文字选择结束位置',
+        变换参数: {
+          scaleX, scaleY, translateX, translateY
+        },
+        画布坐标: {
+          canvasX,
+          canvasY
+        },
+        节点位置: {
+          node_left: this.left,
+          node_top: this.top
+        }
+      })
+      
+      console.log('❓ [问号图标] 位置计算:', {
+        计算公式: {
+          iconX: `${canvasX} - ${this.left} + 5 = ${iconX}`,
+          iconY: `${canvasY} - ${this.top} - 30 = ${iconY}`
+        },
+        最终位置: { iconX, iconY, iconSize },
+        相对于节点的位置: `(${iconX}, ${iconY})`,
+        节点尺寸参考: `节点宽度: ${this.width}, 节点高度: ${this.height}`,
+        定位说明: useMousePosition ? '基于鼠标释放位置的右上方' : '基于文字选择结束位置的右上方'
+      })
       
       // 创建问号图标
       this.questionIcon = this.group.circle(iconSize)
@@ -441,7 +603,16 @@ class MindMapNode {
         })
         .move(iconX, iconY)
       
+      console.log('❓ [问号图标] 图标创建完成:', {
+        圆圈位置: { x: iconX, y: iconY },
+        圆圈大小: iconSize,
+        图标元素: this.questionIcon.node
+      })
+      
       // 添加问号文字（居中在圆形图标内）
+      const textX = iconX + iconSize / 2 - 5
+      const textY = iconY + iconSize / 2 - 9
+      
       this.questionIconText = this.group.text('?')
         .font({
           size: 16,
@@ -459,7 +630,13 @@ class MindMapNode {
           'text-anchor': 'middle',
           'dominant-baseline': 'central'
         })
-        .move(iconX + iconSize / 2 - 5, iconY + iconSize / 2 - 9)
+        .move(textX, textY)
+      
+      console.log('❓ [问号图标] 文字创建完成:', {
+        文字位置: { x: textX, y: textY },
+        文字计算: `x: ${iconX} + ${iconSize}/2 - 5 = ${textX}, y: ${iconY} + ${iconSize}/2 - 9 = ${textY}`,
+        文字元素: this.questionIconText.node
+      })
       
       // 绑定点击事件
       this.questionIcon.on('click', (e) => {
@@ -670,7 +847,7 @@ class MindMapNode {
       }
       this.mindMap.emit('node_mouseup', this, e)
       
-      // 检测文字选择并创建提问节点
+      // 检测文字选择并创建提问节点，传递鼠标位置
       this.handleTextSelection(e)
     })
     this.group.on('mouseenter', e => {
