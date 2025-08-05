@@ -386,7 +386,7 @@ class MindMapNode {
       
       // 创建子节点数据
       const questionNodeData = {
-        text: selectedText,
+        text: selectedText + '?',
         isQuestion: true, // 标记为提问节点
         uid: uid
       }
