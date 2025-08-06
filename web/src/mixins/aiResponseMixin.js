@@ -134,11 +134,23 @@ export default {
         
         // 创建AI回答节点
         console.log('🚀 [AI生成] 正在创建AI回答节点...')
+        console.log('🚀 [AI生成] 父节点详细信息:', {
+          text: node.getData('text'),
+          uid: node.getData('uid') || node.uid,
+          isQuestion: node.getData('isQuestion'),
+          isAIResponse: node.getData('isAIResponse'),
+          nodeType: node.constructor.name
+        })
         const aiNode = await this.createAIResponseNode(node, '🤖 正在思考中...')
         if (!aiNode) {
           throw new Error('创建AI回答节点失败')
         }
         console.log('🚀 [AI生成] AI回答节点创建成功')
+        console.log('🚀 [AI生成] AI回答节点的父节点:', {
+          text: aiNode.parent?.getData('text'),
+          uid: aiNode.parent?.getData('uid') || aiNode.parent?.uid,
+          isQuestion: aiNode.parent?.getData('isQuestion')
+        })
         
         const aiNodeId = aiNode.getData('uid') || aiNode.uid
         console.log('🚀 [AI生成] AI节点ID:', aiNodeId)
