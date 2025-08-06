@@ -651,20 +651,38 @@ class MindMapNode {
       
       // 在子节点中查找
       if (this.children && this.children.length > 0) {
+        // 首先精确匹配UID
         questionNode = this.children.find(child => {
           const childUid = child.getData('uid') || child.uid
-          return childUid === questionNodeUid || child.getData('isQuestion')
+          return childUid === questionNodeUid
         })
         
-        // 如果没找到，取最新的子节点
+        // 如果UID匹配失败，再查找最新的问题节点
+        if (!questionNode) {
+          // 查找所有问题节点，取最新的一个
+          const questionNodes = this.children.filter(child => child.getData('isQuestion'))
+          if (questionNodes.length > 0) {
+            questionNode = questionNodes[questionNodes.length - 1]
+          }
+        }
+        
+        // 如果还是没找到，取最新的子节点作为后备方案
         if (!questionNode) {
           questionNode = this.children[this.children.length - 1]
         }
       }
       
       if (questionNode) {
+        console.log('🎯 [问题节点查找] 找到目标问题节点:', {
+          text: questionNode.getData('text'),
+          uid: questionNode.getData('uid') || questionNode.uid,
+          isQuestion: questionNode.getData('isQuestion')
+        })
+        
         // 触发AI回答生成（通过mindMap事件）
         this.mindMap.emit('generate_ai_response_for_selection', questionNode, questionText)
+      } else {
+        console.warn('🎯 [问题节点查找] 未找到目标问题节点')
       }
     } catch (error) {
       console.error('查找提问节点或触发AI回答失败:', error)
