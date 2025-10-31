@@ -904,11 +904,7 @@ export default {
         
         // 特殊处理mermaid图表
         if (language.toLowerCase() === 'mermaid') {
-          // 创建简化的Mermaid图表容器
-          const mermaidWrapper = document.createElement('div')
-          mermaidWrapper.className = 'mermaid-chart-wrapper'
-          
-          // 直接创建图表容器（移除多余的标题层）
+          // 直接创建图表容器，不要任何标题层
           const chartContainer = document.createElement('div')
           chartContainer.className = 'mermaid-chart-container'
           
@@ -920,10 +916,10 @@ export default {
           chartContainer.innerHTML = `
             <div style="padding: 40px 20px; text-align: center; background: white; min-height: 150px;">
               <div style="color: #10b981; font-size: 16px; margin-bottom: 12px;">
-                🔄 正在渲染Mermaid图表...
+                🔄 正在渲染图表...
               </div>
               <div style="color: #6b7280; font-size: 12px;">
-                请稍候，图表正在生成中
+                请稍候
               </div>
             </div>
           `
@@ -940,9 +936,8 @@ export default {
           // 添加样式
           this.addMermaidStyles()
           
-          // 直接添加到mermaidWrapper（移除额外的header）
-          mermaidWrapper.appendChild(chartContainer)
-          span.appendChild(mermaidWrapper)
+          // 直接添加图表容器，不要wrapper
+          span.appendChild(chartContainer)
           span.style.padding = '0' // 移除默认padding
         } else {
           span.textContent = codeContent
