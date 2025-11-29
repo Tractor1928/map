@@ -318,10 +318,14 @@ export default {
         console.log('🚀 [AI生成] 是否有上下文:', hasContext)
         console.log('🚀 [AI生成] 上下文提示词:', contextPrompt)
         
+        // 获取当前选中的提示词配置（动态获取，支持用户切换）
+        const systemPrompt = AI_PROMPTS.getSystemPrompt(hasContext)
+        console.log('🚀 [AI生成] 使用的提示词配置长度:', systemPrompt.length)
+        
         const messages = [
           { 
             role: 'system', 
-            content: AI_PROMPTS.getSystemPrompt(hasContext)
+            content: systemPrompt
           }
         ]
         
