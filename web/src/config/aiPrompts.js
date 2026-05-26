@@ -1,6 +1,14 @@
 // 预设提示词配置
 export const PRESET_PROMPTS = [
   {
+    id: 'blank',
+    name: '空白模式（无提示词）',
+    isPreset: true,
+    noPrompt: true,
+    system: '',
+    contextual: ''
+  },
+  {
     id: 'default',
     name: '教授模式（默认）',
     isPreset: true,
@@ -177,9 +185,11 @@ output：
 // 创建提示词配置对象
 function createPromptConfig(config) {
   return {
+    noPrompt: Boolean(config.noPrompt),
     system: config.system,
     contextual: config.contextual,
     getSystemPrompt(hasContext = false) {
+      if (this.noPrompt) return ''
       return hasContext ? `${this.system}\n\n${this.contextual}` : this.system
     }
   }
@@ -234,36 +244,50 @@ export const AI_PROMPTS = {
  * @returns {string} 上下文提示词
  */
 export const buildContextPrompt = (currentNode, parentNode) => {
-  // 如果没有父节点或父节点不是AI回答节点，返回空
-  if (!parentNode || !parentNode.getData('isAIResponse')) {
-    return ''
+  const getNodeText = node => {
+    if (!node) return ''
+    const text = (node.getData && node.getData('text')) || node.text || ''
+    const trimmed = String(text).trim()
+    return trimmed.length > 180 ? `${trimmed.substring(0, 180)}...` : trimmed
   }
-  
-  // 获取父节点的父节点（原始问题节点）
-  const grandParentNode = parentNode.parent
-  if (!grandParentNode) {
-    return ''
+
+  // 沿导图父链回溯，构建“根 -> ... -> 当前节点”的链条上下文
+  const chainNodes = []
+  let walker = currentNode
+  while (walker) {
+    chainNodes.push(walker)
+    walker = walker.parent
   }
-  
-  const parentQuestion = grandParentNode.getData('text') || grandParentNode.text
-  const parentAnswer = parentNode.getData('text') || parentNode.text
-  
-  if (!parentQuestion || !parentAnswer) {
+  chainNodes.reverse()
+
+  const chainTexts = chainNodes
+    .map(getNodeText)
+    .filter(Boolean)
+
+  // 只有当前节点，没有可用父链信息时不注入上下文
+  if (chainTexts.length <= 1) {
     return ''
   }
 
-  // 截取回答的核心内容（避免过长）
-  const answerPreview = parentAnswer.length > 400 
-    ? parentAnswer.substring(0, 400) + '...' 
-    : parentAnswer
+  const chainPreview = chainTexts
+    .map((text, index) => `${index + 1}. ${text}`)
+    .join('\n')
 
-  return `**知识路径上下文：**
-上层问题：${parentQuestion}
-核心要点：${answerPreview}
+  // 兼容旧逻辑：如果父节点是AI回答节点，附加其核心内容
+  let parentAnswerHint = ''
+  if (parentNode && parentNode.getData && parentNode.getData('isAIResponse')) {
+    const parentAnswer = getNodeText(parentNode)
+    if (parentAnswer) {
+      parentAnswerHint = `\n上级AI回答摘要：${parentAnswer}`
+    }
+  }
 
-当前你正在对"${parentQuestion}"下的子概念进行深入讲解。
-- 承接上述内容，避免重复基础信息
-- 体现知识的递进关系
-- 保持回答的层级一致性
-`
+  return `**导图层级上下文（按父子链）**
+请严格参考下面的节点链路，保持语义连续并沿该链条展开：
+${chainPreview}${parentAnswerHint}
+
+要求：
+- 回答必须承接链路中的上级语义
+- 避免偏离当前节点主题
+- 保持层级递进与结构一致`
 } 

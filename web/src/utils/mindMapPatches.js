@@ -7,6 +7,8 @@
  */
 function patchTextEditClass(mindMap) {
   const textEdit = mindMap.renderer.textEdit;
+  const verbosePatchLog =
+    typeof window !== 'undefined' && window.__AI_VERBOSE_LOG__ === true;
   
   if (!textEdit || !textEdit.hideEditTextBox) {
     console.warn('⚠️ [补丁] TextEdit实例不存在或hideEditTextBox方法未找到');
@@ -23,7 +25,9 @@ function patchTextEditClass(mindMap) {
   
   // 覆盖方法
   textEdit.hideEditTextBox = function() {
-    console.log('🔧 [补丁] TextEdit.hideEditTextBox被调用');
+    if (verbosePatchLog) {
+      console.log('🔧 [补丁] TextEdit.hideEditTextBox被调用');
+    }
     
     if (this.mindMap.richText) {
       return this.mindMap.richText.hideEditText()
@@ -69,6 +73,8 @@ function patchTextEditClass(mindMap) {
  */
 function patchRichTextPlugin(mindMap) {
   const richText = mindMap.richText;
+  const verbosePatchLog =
+    typeof window !== 'undefined' && window.__AI_VERBOSE_LOG__ === true;
   
   if (!richText || !richText.hideEditText) {
     console.log('ℹ️ [补丁] RichText插件未启用或方法未找到');
@@ -85,7 +91,9 @@ function patchRichTextPlugin(mindMap) {
   
   // 覆盖方法
   richText.hideEditText = function(nodes) {
-    console.log('🔧 [补丁] RichText.hideEditText被调用');
+    if (verbosePatchLog) {
+      console.log('🔧 [补丁] RichText.hideEditText被调用');
+    }
     
     if (!this.showTextEdit) {
       return

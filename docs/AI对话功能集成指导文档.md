@@ -6,6 +6,9 @@
 - 已将设置中的默认 AI 服务从火山方舟接口切换为 DeepSeek API 接口
 - 默认模型更新为 `deepseek-chat`，并同步更新了多语言配置文案
 - 旧客户端模式中 `huoshan` 类型标识已统一替换为 `deepseek`
+- AI 提示词配置新增“空白模式（无提示词）”，该模式下请求仅发送用户问题，不注入 system/contextual 提示词
+- 清理高频重复日志：`[Markdown渲染] 检测到markdown格式`、`[AI生成] 流式更新`、`[补丁] RichText.hideEditText被调用`、`[补丁] TextEdit.hideEditTextBox被调用` 默认静默，仅在 `window.__AI_VERBOSE_LOG__ = true` 时输出
+- 调整空白模式上下文策略：空白模式不注入预设 system 提示词，但仍注入“导图父子链路上下文”；上下文由当前节点向上回溯父链生成，确保回答沿导图层级递进
 
 ### 当前项目架构（mind-map）
 - **技术栈**: Vue 2 + Element UI + simple-mind-map核心库

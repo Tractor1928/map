@@ -5,6 +5,8 @@ import { AI_PROMPTS, buildContextPrompt } from '@/config/aiPrompts'
 const marked = require('marked')
 // 动态导入Mermaid库以避免构建问题
 let mermaid = null
+const verboseAIDebug =
+  typeof window !== 'undefined' && window.__AI_VERBOSE_LOG__ === true
 
 /**
  * AI响应处理Mixin
@@ -320,16 +322,19 @@ export default {
         
         // 获取当前选中的提示词配置（动态获取，支持用户切换）
         const systemPrompt = AI_PROMPTS.getSystemPrompt(hasContext)
+        const promptEnabled = Boolean(systemPrompt && systemPrompt.trim())
         console.log('🚀 [AI生成] 使用的提示词配置长度:', systemPrompt.length)
+        console.log('🚀 [AI生成] 是否启用提示词:', promptEnabled)
         
-        const messages = [
-          { 
-            role: 'system', 
+        const messages = []
+        if (promptEnabled) {
+          messages.push({
+            role: 'system',
             content: systemPrompt
-          }
-        ]
+          })
+        }
         
-        // 如果有上下文，添加具体的上下文信息
+        // 上下文始终按导图链路注入（即使空白提示词模式）
         if (contextPrompt) {
           messages.push({
             role: 'system',
@@ -352,7 +357,9 @@ export default {
           messages,
           // 进度回调 - 流式更新内容
           (content) => {
-            console.log('🚀 [AI生成] 流式更新:', content)
+            if (verboseAIDebug) {
+              console.log('🚀 [AI生成] 流式更新:', content)
+            }
             currentResponse += content
             this.updateAIResponseContent(aiNodeId, currentResponse, false)
           },
@@ -455,7 +462,9 @@ export default {
 
         // 检查是否包含markdown格式
         const hasMarkdown = this.detectMarkdownFormat(content)
-        console.log('🎨 [Markdown渲染] 检测到markdown格式:', hasMarkdown)
+        if (verboseAIDebug) {
+          console.log('🎨 [Markdown渲染] 检测到markdown格式:', hasMarkdown)
+        }
 
         let formattedContent
         if (hasMarkdown && isComplete) {
