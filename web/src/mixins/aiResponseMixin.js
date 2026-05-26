@@ -313,6 +313,9 @@ export default {
         console.log('🚀 [AI生成] 正在获取AI服务...')
         const aiService = aiServiceFactory.getService()
         console.log('🚀 [AI生成] AI服务获取成功:', aiService)
+        if (this.$bus) {
+          this.$bus.$emit('ai_reasoning_reset')
+        }
         
         // 构建上下文提示词
         const contextPrompt = buildContextPrompt(node, node.parent)
@@ -365,7 +368,12 @@ export default {
           },
           // 思考过程回调（可选）
           (reasoning) => {
-            console.log('🚀 [AI生成] AI思考过程:', reasoning)
+            if (this.$bus) {
+              this.$bus.$emit('ai_reasoning_update', reasoning)
+            }
+            if (verboseAIDebug) {
+              console.log('🚀 [AI生成] AI思考过程:', reasoning)
+            }
           }
         )
         console.log('🚀 [AI生成] AI服务调用完成，完整回答:', fullResponse)

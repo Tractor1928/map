@@ -6,6 +6,7 @@ class Ai {
     this.controller = null
     this.currentChunk = ''
     this.content = ''
+    this.reasoningContent = ''
   }
 
   init(type = 'deepseek', options = {}) {
@@ -25,8 +26,16 @@ class Ai {
     }
   }
 
-  async request(data, progress = () => {}, end = () => {}, err = () => {}) {
+  async request(
+    data,
+    progress = () => {},
+    end = () => {},
+    err = () => {},
+    reasoningProgress = () => {}
+  ) {
     try {
+      this.content = ''
+      this.reasoningContent = ''
       const res = await this.postMsg(data)
       const decoder = new TextDecoder()
       while (1) {
@@ -56,8 +65,14 @@ class Ai {
               return item2.delta.content
             })
             .join('')
+          this.reasoningContent += item.choices
+            .map(item2 => {
+              return item2.delta.reasoning_content || ''
+            })
+            .join('')
         })
         progress(this.content)
+        reasoningProgress(this.reasoningContent)
         if (isEnd) {
           end(this.content)
         }

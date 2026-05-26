@@ -9,6 +9,11 @@
 - AI 提示词配置新增“空白模式（无提示词）”，该模式下请求仅发送用户问题，不注入 system/contextual 提示词
 - 清理高频重复日志：`[Markdown渲染] 检测到markdown格式`、`[AI生成] 流式更新`、`[补丁] RichText.hideEditText被调用`、`[补丁] TextEdit.hideEditTextBox被调用` 默认静默，仅在 `window.__AI_VERBOSE_LOG__ = true` 时输出
 - 调整空白模式上下文策略：空白模式不注入预设 system 提示词，但仍注入“导图父子链路上下文”；上下文由当前节点向上回溯父链生成，确保回答沿导图层级递进
+- AI 对话区新增底部“思考过程”抽屉：支持流式展示 `reasoning_content`，默认收起，用户可随时展开查看
+- 统一配置源为侧边栏设置：侧边栏中的 API Key/模型会同步写入 `vuex.aiConfig`，确保 AI 对话请求使用的模型与侧边栏保持一致
+- 修复思考流透传链路：`ModernAIService` 现已支持 `onReasoningProgress` 回调并解析 `delta.reasoning_content`；对于 `deepseek-v4-*` 请求显式附加 thinking 参数（`reasoning_effort=high` + `extra_body.thinking.enabled`）
+- 节点 AI 自动生成链路补充思考展示：在 `AiCreate.vue` 增加底部“思考过程”抽屉，并通过总线事件接收 `aiResponseMixin` 推送的实时 reasoning 内容
+- 思考抽屉字体跟随导图主题字体：`AiCreate.vue` 中抽屉内容字体改为读取 `mindMap.getThemeConfig('fontFamily')`，与导图文字风格保持一致
 
 ### 当前项目架构（mind-map）
 - **技术栈**: Vue 2 + Element UI + simple-mind-map核心库

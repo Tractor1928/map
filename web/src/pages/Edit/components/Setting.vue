@@ -583,7 +583,8 @@ export default {
     ...mapState({
       activeSidebar: state => state.activeSidebar,
       localConfig: state => state.localConfig,
-      isDark: state => state.localConfig.isDark
+      isDark: state => state.localConfig.isDark,
+      aiConfig: state => state.aiConfig
     }),
     // 当前选中的配置是否可编辑（预设配置不可编辑）
     canEditCurrentPrompt() {
@@ -740,9 +741,18 @@ export default {
 
     // 初始化AI配置
     initAiConfig() {
-      this.aiConfigs.apiKey = localStorage.getItem('apiKey') || ''
-      this.aiConfigs.model = localStorage.getItem('model') || 'deepseek-chat'
+      this.aiConfigs.apiKey =
+        this.aiConfig.key || localStorage.getItem('apiKey') || ''
+      this.aiConfigs.model =
+        this.aiConfig.model || localStorage.getItem('model') || 'deepseek-chat'
       this.aiConfigs.serviceType = localStorage.getItem('ai_service_mode') || 'modern'
+
+      // 同步侧边栏配置到请求实际使用的 vuex aiConfig
+      this.setLocalConfig({
+        key: this.aiConfigs.apiKey,
+        model: this.aiConfigs.model
+      })
+
       if (!localStorage.getItem('model')) {
         localStorage.setItem('model', 'deepseek-chat')
       }
@@ -755,8 +765,10 @@ export default {
       // 保存到localStorage
       if (key === 'apiKey') {
         localStorage.setItem('apiKey', value)
+        this.setLocalConfig({ key: value })
       } else if (key === 'model') {
         localStorage.setItem('model', value)
+        this.setLocalConfig({ model: value })
       } else if (key === 'serviceType') {
         localStorage.setItem('ai_service_mode', value)
       }

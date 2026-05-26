@@ -6,6 +6,18 @@
           <span class="el-icon-delete"></span>
           {{ $t('ai.clearRecords') }}
         </el-button>
+        <el-button
+          size="mini"
+          class="reasoningBtn"
+          @click="reasoningDrawerVisible = !reasoningDrawerVisible"
+        >
+          <span
+            :class="
+              reasoningDrawerVisible ? 'el-icon-arrow-down' : 'el-icon-arrow-up'
+            "
+          ></span>
+          思考过程
+        </el-button>
         <el-button size="mini" @click="modifyAiConfig">
           <span class="el-icon-edit"></span>
           {{ $t('ai.modifyAIConfiguration') }}
@@ -30,6 +42,15 @@
             </div>
             <div class="content" v-html="item.content"></div>
           </div>
+        </div>
+      </div>
+      <div class="reasoningDrawer" :class="{ open: reasoningDrawerVisible }">
+        <div class="drawerHeader">思考过程</div>
+        <div class="drawerBody customScrollbar" ref="reasoningBoxRef">
+          <pre v-if="reasoningContent" class="reasoningContent">{{
+            reasoningContent
+          }}</pre>
+          <div v-else class="drawerEmpty">暂无思考内容</div>
         </div>
       </div>
       <div class="chatInputBox">
@@ -73,7 +94,9 @@ export default {
     return {
       text: '',
       chatList: [],
-      isCreating: false
+      isCreating: false,
+      reasoningContent: '',
+      reasoningDrawerVisible: false
     }
   },
   computed: {
@@ -128,6 +151,7 @@ export default {
         type: 'ai',
         content: ''
       })
+      this.reasoningContent = ''
       this.isCreating = true
       const textList = [...historyUserMsgList, text]
       this.$bus.$emit(
@@ -146,6 +170,15 @@ export default {
         () => {
           this.isCreating = false
           this.$message.error(this.$t('ai.generationFailed'))
+        },
+        reasoning => {
+          this.reasoningContent = reasoning || ''
+          this.$nextTick(() => {
+            if (this.reasoningDrawerVisible && this.$refs.reasoningBoxRef) {
+              this.$refs.reasoningBoxRef.scrollTop =
+                this.$refs.reasoningBoxRef.scrollHeight
+            }
+          })
         }
       )
     },
@@ -157,6 +190,7 @@ export default {
 
     clear() {
       this.chatList = []
+      this.reasoningContent = ''
     },
 
     modifyAiConfig() {
@@ -183,6 +217,10 @@ export default {
     display: flex;
     align-items: center;
     padding: 0 12px;
+
+    .reasoningBtn {
+      margin-left: 8px;
+    }
   }
 
   .chatResBox {
@@ -334,6 +372,51 @@ export default {
       left: 50%;
       transform: translateX(-50%);
       top: -30px;
+    }
+  }
+
+  .reasoningDrawer {
+    flex-shrink: 0;
+    border-top: 1px solid #e8e8e8;
+    border-bottom: 1px solid #e8e8e8;
+    background-color: #fafafa;
+    height: 32px;
+    transition: height 0.2s ease;
+    overflow: hidden;
+
+    &.open {
+      height: 180px;
+    }
+
+    .drawerHeader {
+      height: 32px;
+      line-height: 32px;
+      padding: 0 12px;
+      font-size: 12px;
+      color: #606266;
+      border-bottom: 1px solid #ebeef5;
+      background-color: #f5f7fa;
+    }
+
+    .drawerBody {
+      height: calc(100% - 32px);
+      overflow-y: auto;
+      padding: 8px 12px;
+    }
+
+    .drawerEmpty {
+      font-size: 12px;
+      color: #909399;
+    }
+
+    .reasoningContent {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #303133;
+      font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
     }
   }
 }

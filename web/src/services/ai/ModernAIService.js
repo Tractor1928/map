@@ -50,6 +50,15 @@ export default class ModernAIService extends IAIService {
   }
 
   /**
+   * 判断是否是 DeepSeek V4 思考模型
+   * @param {string} model
+   * @returns {boolean}
+   */
+  isV4ThinkingModel(model) {
+    return typeof model === 'string' && model.startsWith('deepseek-v4')
+  }
+
+  /**
    * 带重试机制的fetch请求
    * @param {string} url - 请求URL
    * @param {Object} options - 请求选项
@@ -100,7 +109,7 @@ export default class ModernAIService extends IAIService {
    * @param {Function} onStreamContent - 流式内容回调
    * @returns {Promise<string>} AI回答内容
    */
-  async generateResponse(messages, onStreamContent = null) {
+  async generateResponse(messages, onStreamContent = null, onReasoningProgress = null) {
     try {
       const model = this.getModel()
       const url = `${this.getBaseURL()}/chat/completions`
@@ -109,16 +118,28 @@ export default class ModernAIService extends IAIService {
       console.log('📝 使用模型:', model)
       console.log('💬 消息数量:', messages.length)
 
+      const requestBody = {
+        model,
+        messages,
+        stream: Boolean(onStreamContent),
+        temperature: 0.7,
+        max_tokens: 2000
+      }
+
+      // 对 DeepSeek V4 系列显式开启 thinking，避免 reasoning_content 丢失
+      if (this.isV4ThinkingModel(model)) {
+        requestBody.reasoning_effort = 'high'
+        requestBody.extra_body = {
+          thinking: {
+            type: 'enabled'
+          }
+        }
+      }
+
       const response = await this.fetchWithRetry(url, {
         method: 'POST',
         headers: this.getHeaders(),
-        body: JSON.stringify({
-          model,
-          messages,
-          stream: Boolean(onStreamContent),
-          temperature: 0.7,
-          max_tokens: 2000
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -138,9 +159,17 @@ export default class ModernAIService extends IAIService {
       }
 
       if (onStreamContent) {
-        return await this._handleStreamResponse(response, onStreamContent)
+        return await this._handleStreamResponse(
+          response,
+          onStreamContent,
+          onReasoningProgress
+        )
       } else {
         const data = await response.json()
+        const fullReasoning = data.choices?.[0]?.message?.reasoning_content || ''
+        if (fullReasoning && onReasoningProgress) {
+          onReasoningProgress(fullReasoning)
+        }
         return data.choices?.[0]?.message?.content || ''
       }
     } catch (error) {
@@ -159,12 +188,13 @@ export default class ModernAIService extends IAIService {
    * @param {Function} onStreamContent - 流式内容回调
    * @returns {Promise<string>} 完整回答内容
    */
-  async _handleStreamResponse(response, onStreamContent) {
+  async _handleStreamResponse(response, onStreamContent, onReasoningProgress = null) {
     const reader = response.body?.getReader()
     if (!reader) throw new Error('无法读取响应内容')
 
     const decoder = new TextDecoder()
     let fullResponse = ''
+    let fullReasoning = ''
 
     try {
       while (true) {
@@ -185,6 +215,13 @@ export default class ModernAIService extends IAIService {
               if (content) {
                 fullResponse += content
                 onStreamContent(content)
+              }
+              const reasoning = parsed.choices?.[0]?.delta?.reasoning_content || ''
+              if (reasoning) {
+                fullReasoning += reasoning
+                if (onReasoningProgress) {
+                  onReasoningProgress(fullReasoning)
+                }
               }
             } catch (e) {
               console.warn('解析流式数据失败:', e)
