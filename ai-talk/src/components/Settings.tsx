@@ -10,7 +10,7 @@ interface SettingsProps {
 
 export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
   const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('ep-20250211144523-bvb8x');
+  const [model, setModel] = useState('deepseek-chat');
   const [apiMode, setApiMode] = useState<ApiMode>('mock');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<boolean | null>(null);
@@ -25,7 +25,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     
     if (savedApiKey) setApiKey(savedApiKey);
     if (savedModel) setModel(savedModel);
-    else localStorage.setItem('model', 'ep-20250211144523-bvb8x');
+    else localStorage.setItem('model', 'deepseek-chat');
     setApiMode(savedMode);
   }, []);
 
@@ -106,7 +106,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="ARK_API_KEY"
+              placeholder="sk-..."
               className="settings-input"
               disabled={apiMode === 'mock'}
             />
@@ -123,7 +123,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              placeholder="ep-20250211144523-bvb8x"
+              placeholder="deepseek-chat"
               className="settings-input"
               disabled={apiMode === 'mock'}
             />

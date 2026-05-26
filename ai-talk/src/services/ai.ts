@@ -2,7 +2,7 @@ import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
 export class AIService {
   private getBaseURL(): string {
-    const url = process.env.REACT_APP_API_URL || 'https://ai-mind-map-proxy.nionxd1928.workers.dev/proxy';
+    const url = process.env.REACT_APP_API_URL || 'https://api.deepseek.com';
     console.log('Using API URL:', url);
     return url;
   }

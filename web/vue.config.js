@@ -42,8 +42,8 @@ module.exports = {
   },
   devServer: {
     proxy: {
-      '^/api/v3/': {
-        target: 'http://ark.cn-beijing.volces.com',
+      '^/v1/': {
+        target: 'https://api.deepseek.com',
         changeOrigin: true
       }
     }

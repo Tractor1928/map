@@ -17,8 +17,8 @@ export default class ModernAIService extends IAIService {
    * @returns {string} API基础URL
    */
   getBaseURL() {
-    // 优先使用环境变量，否则使用代理URL
-    return process.env.VUE_APP_API_URL || 'https://ai-mind-map-proxy.nionxd1928.workers.dev/proxy'
+    // 优先使用环境变量，否则默认使用 DeepSeek API
+    return process.env.VUE_APP_API_URL || 'https://api.deepseek.com'
   }
 
   /**
@@ -278,9 +278,8 @@ export default class ModernAIService extends IAIService {
       console.warn('获取AI模型列表失败:', error)
       // 返回默认模型列表
       return [
-        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: '快速响应，适合日常对话' },
-        { id: 'gpt-4', name: 'GPT-4', description: '更强大的推理能力，适合复杂任务' },
-        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: '性能优化版本，平衡速度和质量' }
+        { id: 'deepseek-chat', name: 'DeepSeek Chat', description: '通用对话模型，响应速度快' },
+        { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner', description: '推理模型，适合复杂分析任务' }
       ]
     }
   }

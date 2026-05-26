@@ -2,6 +2,11 @@
 
 ## 项目概述
 
+### 最新进展（2026-05-26）
+- 已将设置中的默认 AI 服务从火山方舟接口切换为 DeepSeek API 接口
+- 默认模型更新为 `deepseek-chat`，并同步更新了多语言配置文案
+- 旧客户端模式中 `huoshan` 类型标识已统一替换为 `deepseek`
+
 ### 当前项目架构（mind-map）
 - **技术栈**: Vue 2 + Element UI + simple-mind-map核心库
 - **AI功能现状**: 

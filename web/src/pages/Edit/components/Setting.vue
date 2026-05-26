@@ -741,8 +741,11 @@ export default {
     // 初始化AI配置
     initAiConfig() {
       this.aiConfigs.apiKey = localStorage.getItem('apiKey') || ''
-      this.aiConfigs.model = localStorage.getItem('model') || ''
+      this.aiConfigs.model = localStorage.getItem('model') || 'deepseek-chat'
       this.aiConfigs.serviceType = localStorage.getItem('ai_service_mode') || 'modern'
+      if (!localStorage.getItem('model')) {
+        localStorage.setItem('model', 'deepseek-chat')
+      }
     },
 
     // 更新AI配置

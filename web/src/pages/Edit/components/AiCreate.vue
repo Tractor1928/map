@@ -247,7 +247,7 @@ export default {
       this.aiInstance = new Ai({
         port: this.aiConfig.port
       })
-      this.aiInstance.init('huoshan', this.aiConfig)
+      this.aiInstance.init('deepseek', this.aiConfig)
       this.mindMap.renderer.setRootNodeCenter()
       this.mindMap.setData(null)
       this.aiInstance.request(
@@ -445,7 +445,7 @@ export default {
         this.aiInstance = new Ai({
           port: this.aiConfig.port
         })
-        this.aiInstance.init('huoshan', this.aiConfig)
+        this.aiInstance.init('deepseek', this.aiConfig)
         this.aiInstance.request(
           {
             messages: [
@@ -563,7 +563,7 @@ export default {
         this.aiInstance = new Ai({
           port: this.aiConfig.port
         })
-        this.aiInstance.init('huoshan', this.aiConfig)
+        this.aiInstance.init('deepseek', this.aiConfig)
         this.aiInstance.request(
           {
             messages: messageList.map(msg => {

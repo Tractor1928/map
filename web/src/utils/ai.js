@@ -8,9 +8,9 @@ class Ai {
     this.content = ''
   }
 
-  init(type = 'huoshan', options = {}) {
-    // 火山引擎接口
-    if (type === 'huoshan') {
+  init(type = 'deepseek', options = {}) {
+    // DeepSeek 接口（OpenAI 兼容）
+    if (type === 'deepseek') {
       this.baseData = {
         api: options.api,
         method: options.method,
