@@ -294,19 +294,18 @@ export const cssContent = `
     transition: all 0.2s ease;
   }
 
+  /* 图标文字层：pointer-events: none 让鼠标事件穿透到下层图标形状 */
+  /* 这样鼠标悬浮在文字上时显示的是下层图标的手型光标，而非文字框选光标 */
   .smm-question-icon-text {
     z-index: 1001;
     user-select: none;
-    pointer-events: auto !important;
-    cursor: pointer !important;
+    pointer-events: none !important;
   }
-  
-  /* 超高优先级：确保问号图标文字永远是手型光标 */
+
   .smm-node .smm-question-icon-text,
   text.smm-question-icon-text,
   .smm-question-icon-text * {
-    cursor: pointer !important;
-    pointer-events: auto !important;
+    pointer-events: none !important;
   }
 
   /* "怎么实现的"图标样式 */
@@ -318,16 +317,13 @@ export const cssContent = `
   .smm-howto-icon-text {
     z-index: 1001;
     user-select: none;
-    pointer-events: auto !important;
-    cursor: pointer !important;
+    pointer-events: none !important;
   }
 
-  /* 超高优先级：确保howto图标文字永远是手型光标 */
   .smm-node .smm-howto-icon-text,
   text.smm-howto-icon-text,
   .smm-howto-icon-text * {
-    cursor: pointer !important;
-    pointer-events: auto !important;
+    pointer-events: none !important;
   }
 `
 

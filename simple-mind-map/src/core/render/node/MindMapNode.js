@@ -484,84 +484,25 @@ class MindMapNode {
         .attr({
           'text-anchor': 'middle',
           'dominant-baseline': 'central',
-          'cursor': 'pointer',
-          'pointer-events': 'auto'
+          'pointer-events': 'none'
         })
         .css({
           userSelect: 'none'
         })
         .move(textX, textY)
-      
-      // 直接设置DOM元素的内联样式，确保最高优先级
-      this.questionIconText.node.style.cursor = 'pointer'
-      this.questionIconText.node.style.pointerEvents = 'auto'
+
+      // 图标圆圈设置手型光标
       this.questionIcon.node.style.cursor = 'pointer'
-      
-      // 绑定点击事件
+
+      // 只给圆圈绑定事件（文字设置了 pointer-events: none 会穿透到圆圈）
       this.questionIcon.on('click', (e) => {
         e.stopPropagation()
         this.onQuestionIconClick()
       })
-      
-      // 给问号文字也绑定相同的点击事件
-      this.questionIconText.on('click', (e) => {
-        e.stopPropagation()
-        this.onQuestionIconClick()
-      })
-      
-      // 强制设置问号图标的鼠标样式
+
       this.questionIcon.on('mouseover', (e) => {
         e.stopPropagation()
-        e.target.style.cursor = 'pointer'
         this.questionIcon.css({ cursor: 'pointer' })
-      })
-      
-      this.questionIconText.on('mouseover', (e) => {
-        e.stopPropagation()
-        e.target.style.cursor = 'pointer'
-        this.questionIconText.css({ cursor: 'pointer' })
-        // 同时也设置父组的cursor
-        this.group.css({ cursor: 'pointer' })
-        
-        // 🔍 调试：检查问号文字的cursor样式
-        console.log('🔍 [CURSOR调试] 问号文字mouseover时的样式检查:')
-        const textElement = this.questionIconText.node
-        const computedStyle = window.getComputedStyle(textElement)
-        console.log('- DOM元素:', textElement)
-        console.log('- 元素类名:', textElement.className.baseVal || textElement.className)
-        console.log('- 内联样式cursor:', textElement.style.cursor)
-        console.log('- 计算后样式cursor:', computedStyle.cursor)
-        console.log('- pointer-events:', computedStyle.pointerEvents)
-        console.log('- 所有CSS规则:')
-        
-        // 遍历所有匹配的CSS规则
-        const sheets = document.styleSheets
-        for (let i = 0; i < sheets.length; i++) {
-          try {
-            const rules = sheets[i].cssRules || sheets[i].rules
-            for (let j = 0; j < rules.length; j++) {
-              const rule = rules[j]
-              if (rule.selectorText && textElement.matches && textElement.matches(rule.selectorText)) {
-                console.log(`  规则: ${rule.selectorText} -> cursor: ${rule.style.cursor || 'inherit'}`)
-              }
-            }
-          } catch (e) {
-            // 跨域CSS无法访问
-          }
-        }
-      })
-      
-      this.questionIconText.on('mouseout', (e) => {
-        // 如果鼠标移向问号图标圆圈或howto图标，保持手型光标
-        const relatedTarget = e.relatedTarget
-        if (relatedTarget && relatedTarget.closest && (
-          relatedTarget.closest('.smm-question-icon') ||
-          relatedTarget.closest('.smm-howto-icon')
-        )) {
-          return
-        }
-        // 恢复父组的默认光标
-        this.group.css({ cursor: 'default' })
       })
       
       // 添加动画效果
@@ -598,8 +539,7 @@ class MindMapNode {
           'y': howtoTextY,
           'text-anchor': 'middle',
           'dominant-baseline': 'central',
-          'cursor': 'pointer',
-          'pointer-events': 'auto'
+          'pointer-events': 'none'
         })
         .css({
           userSelect: 'none'
@@ -609,47 +549,18 @@ class MindMapNode {
       this.howtoIcon.node.setAttribute('title', '询问怎么实现的')
       this.howtoIconText.node.setAttribute('title', '询问怎么实现的')
 
-      // 直接设置DOM元素的内联样式
-      this.howtoIconText.node.style.cursor = 'pointer'
-      this.howtoIconText.node.style.pointerEvents = 'auto'
+      // 图标椭圆设置手型光标
       this.howtoIcon.node.style.cursor = 'pointer'
 
-      // 绑定点击事件
+      // 只给椭圆绑定事件（文字设置了 pointer-events: none 会穿透到椭圆）
       this.howtoIcon.on('click', (e) => {
         e.stopPropagation()
         this.onHowToIconClick()
       })
 
-      this.howtoIconText.on('click', (e) => {
-        e.stopPropagation()
-        this.onHowToIconClick()
-      })
-
-      // 鼠标事件：确保手型光标
       this.howtoIcon.on('mouseover', (e) => {
         e.stopPropagation()
-        e.target.style.cursor = 'pointer'
         this.howtoIcon.css({ cursor: 'pointer' })
-      })
-
-      this.howtoIconText.on('mouseover', (e) => {
-        e.stopPropagation()
-        e.target.style.cursor = 'pointer'
-        this.howtoIconText.css({ cursor: 'pointer' })
-        this.group.css({ cursor: 'pointer' })
-      })
-
-      this.howtoIconText.on('mouseout', (e) => {
-        // 如果鼠标移向问号图标或howto图标圆圈，保持手型光标
-        const relatedTarget = e.relatedTarget
-        if (relatedTarget && relatedTarget.closest && (
-          relatedTarget.closest('.smm-question-icon') ||
-          relatedTarget.closest('.smm-howto-icon')
-        )) {
-          return
-        }
-        // 恢复父组的默认光标
-        this.group.css({ cursor: 'default' })
       })
 
       // 第二个图标也添加动画效果

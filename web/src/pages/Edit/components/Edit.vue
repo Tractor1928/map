@@ -631,69 +631,46 @@ export default {
     // 设置AI相关事件监听
     setupAIEventListeners() {
       if (!this.mindMap) {
-        console.warn('🎯 [事件监听] mindMap实例不存在')
         return
       }
 
-      console.log('🎯 [事件监听] 正在设置AI事件监听...')
-      console.log('🎯 [事件监听] mindMap实例:', this.mindMap)
-      console.log('🎯 [事件监听] handleNodeTextEditEnd方法:', this.handleNodeTextEditEnd)
-
       // 监听节点文本编辑完成事件
       this.mindMap.on('node_text_edit_end', this.handleNodeTextEditEnd)
-      console.log('🎯 [事件监听] 已绑定node_text_edit_end事件')
-      
-      // 监听节点激活事件（用于调试和状态管理）
+
+      // 监听节点激活事件
       this.mindMap.on('node_active', (node, activeNodeList) => {
-        console.log('🎯 [事件监听] 节点激活:', node?.getData?.('text') || '未知节点')
-        if (node && node.getData('isAIResponse')) {
-          console.log('🎯 [事件监听] AI回答节点被激活:', node.getData('text'))
-        }
+        // reserved
       })
 
-      // 监听数据变化事件（用于同步AI回答节点状态）
+      // 监听数据变化事件
       this.mindMap.on('data_change', (data) => {
-        console.log('🎯 [事件监听] 数据变化事件触发')
-        // 这里可以添加AI回答节点的数据持久化逻辑
+        // reserved
       })
 
       // 监听文字选择生成AI回答事件
       this.mindMap.on('generate_ai_response_for_selection', (questionNode, questionText) => {
-        console.log('🎯 [文字选择AI] 收到文字选择AI回答请求:', questionText)
-        console.log('🎯 [文字选择AI] 提问节点:', questionNode)
-        
         if (questionNode && questionText) {
-          // 为提问节点生成AI回答
           this.$nextTick(() => {
             this.generateAIResponse(questionNode, questionText)
           })
         }
       })
-      console.log('🎯 [事件监听] 已绑定generate_ai_response_for_selection事件')
 
-      console.log('🎯 [事件监听] ✅ AI事件监听设置完成')
-
-      // 为了调试方便，在控制台输出相关信息
+      // 开发环境挂载调试工具
       if (typeof window !== 'undefined') {
         window.mindMapInstance = this.mindMap
-        console.log('🎯 [事件监听] 🛠️ mindMap实例已挂载到 window.mindMapInstance')
-        
+
         // 添加手动测试函数
         window.testAIResponse = (text) => {
-          console.log('🧪 [手动测试] 测试AI回答生成:', text)
           const activeNodes = this.mindMap.renderer.activeNodeList
           if (activeNodes && activeNodes.length > 0) {
             const node = activeNodes[0]
-            console.log('🧪 [手动测试] 当前激活节点:', node)
             this.handleNodeTextEditEnd(node, text, '')
-          } else {
-            console.warn('🧪 [手动测试] 没有激活的节点，请先选中一个节点')
           }
         }
-        
+
         // 添加markdown测试函数
         window.testMarkdownAI = (markdownText) => {
-          console.log('🎨 [Markdown测试] 测试markdown AI回答:', markdownText)
           
           // 模拟AI回答包含markdown格式的内容
           const mockAIResponse = markdownText || `# 这是AI的回答
@@ -729,42 +706,20 @@ function example() {
               setTimeout(() => {
                 const aiNodeId = this.aiResponseNodes.get(node.getData('uid') || node.uid)
                 if (aiNodeId) {
-                  console.log('🎨 [Markdown测试] 正在更新AI节点内容为markdown格式')
                   this.updateAIResponseContent(aiNodeId, mockAIResponse, true)
                 }
               }, 1000)
             })
-          } else {
-            console.warn('🎨 [Markdown测试] 请先选中一个节点')
           }
         }
-        
-        console.log('🎯 [事件监听] 💡 可以使用以下命令测试AI功能:')
-        console.log('   window.testAIResponse("你的问题") - 手动测试基础AI回答')
-        console.log('   window.testMarkdownAI() - 测试markdown格式渲染')
-        console.log('   window.testMarkdownAI("# 自定义markdown内容") - 测试自定义markdown')
-        
-        // 开发环境下添加更多测试工具
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🎯 [开发模式] 加载测试工具...')
-          
-          // 动态加载markdown测试工具
-          import('@/utils/markdownTest.js').then(markdownTest => {
-            console.log('✅ [开发模式] markdown测试工具加载完成')
-            console.log('   使用 window.markdownTest 访问所有测试功能')
-          }).catch(error => {
-            console.warn('⚠️ [开发模式] markdown测试工具加载失败:', error)
-          })
 
-          // 动态加载文字选择测试工具
+        // 开发环境下加载测试工具
+        if (process.env.NODE_ENV === 'development') {
+          import('@/utils/markdownTest.js').catch(() => {})
           import('@/utils/selectionTest.js').then(selectionTestModule => {
             const selectionTest = selectionTestModule.default
             selectionTest.init(this.mindMap)
-            console.log('✅ [开发模式] 文字选择测试工具加载完成')
-            console.log('   使用 window.selectionTest 访问所有测试功能')
-          }).catch(error => {
-            console.warn('⚠️ [开发模式] 文字选择测试工具加载失败:', error)
-          })
+          }).catch(() => {})
         }
       }
     },

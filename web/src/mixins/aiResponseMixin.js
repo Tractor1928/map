@@ -177,23 +177,19 @@ export default {
      * @returns {boolean} 是否需要AI回答
      */
     shouldGenerateAIResponse(text) {
-      console.log('🧠 [AI判断] 开始分析文本:', text)
-      
+
       if (!text || typeof text !== 'string' || text.length < 3) {
-        console.log('🧠 [AI判断] 文本无效:', { text, type: typeof text, length: text?.length })
         return false
       }
-      
+
       // 如果AI功能被禁用，直接返回false
       if (!this.aiResponseEnabled) {
-        console.log('🧠 [AI判断] AI功能已禁用')
         return false
       }
-      
+
       // 移除多余的空白字符
       const trimmedText = text.trim()
-      console.log('🧠 [AI判断] 处理后文本:', trimmedText)
-      
+
       // 问题关键词判断
       const questionIndicators = [
         '?', '？', // 问号
@@ -204,41 +200,22 @@ export default {
         '介绍', '解释', '说明', '阐述', // 解释类
         '对比', '区别', '不同', '差异', // 对比类
       ]
-      
-      const matchedIndicators = questionIndicators.filter(indicator => 
+
+      const matchedIndicators = questionIndicators.filter(indicator =>
         trimmedText.includes(indicator)
       )
       const hasQuestionIndicator = matchedIndicators.length > 0
-      console.log('🧠 [AI判断] 问题关键词检查:', { 
-        matched: matchedIndicators,
-        hasQuestionIndicator 
-      })
-      
+
       // 句子结构判断（较长的陈述句也可能需要AI回答）
       const isLongStatement = trimmedText.length > 15 && !trimmedText.includes('：') && !trimmedText.includes(':')
-      console.log('🧠 [AI判断] 长句判断:', { 
-        length: trimmedText.length,
-        hasColon: trimmedText.includes('：') || trimmedText.includes(':'),
-        isLongStatement 
-      })
-      
+
       // 专业术语判断（包含专业词汇的短句）
       const technicalTerms = ['AI', '算法', '编程', '技术', '架构', '框架', '设计模式', '数据结构']
       const matchedTerms = technicalTerms.filter(term => trimmedText.includes(term))
       const hasTechnicalTerm = matchedTerms.length > 0 && trimmedText.length > 8
-      console.log('🧠 [AI判断] 专业术语检查:', { 
-        matched: matchedTerms,
-        hasTechnicalTerm 
-      })
-      
+
       const result = hasQuestionIndicator || isLongStatement || hasTechnicalTerm
-      console.log('🧠 [AI判断] 最终结果:', {
-        hasQuestionIndicator,
-        isLongStatement,
-        hasTechnicalTerm,
-        finalResult: result
-      })
-      
+
       return result
     },
 
@@ -248,87 +225,55 @@ export default {
      * @param {string} question - 问题文本
      */
     async generateAIResponse(node, question) {
-      console.log('🚀 [AI生成] 开始生成AI回答')
-      console.log('🚀 [AI生成] 参数检查:', { node, question })
-      
+
       if (!node || !question) {
-        console.warn('🚀 [AI生成] 缺少必要参数')
         return
       }
-      
+
       const nodeId = node.getData('uid') || node.uid
-      console.log('🚀 [AI生成] 节点ID:', nodeId)
-      
+
       if (!nodeId) {
-        console.warn('🚀 [AI生成] 无法获取节点ID')
         return
       }
-      
+
       // 避免重复请求
       if (this.pendingAIRequests.has(nodeId)) {
-        console.log(`🚀 [AI生成] 节点 ${nodeId} 已有正在处理的AI请求`)
         return
       }
-      
+
       // 避免为AI回答节点再次生成回答
       if (node.getData('isAIResponse')) {
-        console.log('🚀 [AI生成] 跳过为AI回答节点生成回答')
         return
       }
 
       this.pendingAIRequests.add(nodeId)
-      console.log('🚀 [AI生成] 已添加到待处理请求列表')
 
       try {
-        console.log(`🚀 [AI生成] 开始为节点 ${nodeId} 生成AI回答，问题: ${question}`)
-        
         // 创建AI回答节点
-        console.log('🚀 [AI生成] 正在创建AI回答节点...')
-        console.log('🚀 [AI生成] 父节点详细信息:', {
-          text: node.getData('text'),
-          uid: node.getData('uid') || node.uid,
-          isQuestion: node.getData('isQuestion'),
-          isAIResponse: node.getData('isAIResponse'),
-          nodeType: node.constructor.name
-        })
         const aiNode = await this.createAIResponseNode(node, '🤖 正在思考中...')
         if (!aiNode) {
           throw new Error('创建AI回答节点失败')
         }
-        console.log('🚀 [AI生成] AI回答节点创建成功')
-        console.log('🚀 [AI生成] AI回答节点的父节点:', {
-          text: aiNode.parent?.getData('text'),
-          uid: aiNode.parent?.getData('uid') || aiNode.parent?.uid,
-          isQuestion: aiNode.parent?.getData('isQuestion')
-        })
-        
+
         const aiNodeId = aiNode.getData('uid') || aiNode.uid
-        console.log('🚀 [AI生成] AI节点ID:', aiNodeId)
-        
+
         // 存储映射关系
         this.aiResponseNodes.set(nodeId, aiNodeId)
-        console.log('🚀 [AI生成] 节点映射关系已存储')
 
         // 调用AI服务
-        console.log('🚀 [AI生成] 正在获取AI服务...')
         const aiService = aiServiceFactory.getService()
-        console.log('🚀 [AI生成] AI服务获取成功:', aiService)
         if (this.$bus) {
           this.$bus.$emit('ai_reasoning_reset')
         }
-        
+
         // 构建上下文提示词
         const contextPrompt = buildContextPrompt(node, node.parent)
         const hasContext = Boolean(contextPrompt)
-        console.log('🚀 [AI生成] 是否有上下文:', hasContext)
-        console.log('🚀 [AI生成] 上下文提示词:', contextPrompt)
-        
+
         // 获取当前选中的提示词配置（动态获取，支持用户切换）
         const systemPrompt = AI_PROMPTS.getSystemPrompt(hasContext)
         const promptEnabled = Boolean(systemPrompt && systemPrompt.trim())
-        console.log('🚀 [AI生成] 使用的提示词配置长度:', systemPrompt.length)
-        console.log('🚀 [AI生成] 是否启用提示词:', promptEnabled)
-        
+
         const messages = []
         if (promptEnabled) {
           messages.push({
@@ -336,33 +281,26 @@ export default {
             content: systemPrompt
           })
         }
-        
+
         // 上下文始终按导图链路注入（即使空白提示词模式）
         if (contextPrompt) {
           messages.push({
             role: 'system',
             content: contextPrompt
           })
-          console.log('🚀 [AI生成] 已添加上下文信息')
         }
-        
+
         // 添加用户问题
         messages.push({
           role: 'user',
           content: question
         })
-        
-        console.log('🚀 [AI生成] 准备发送消息:', messages)
 
         let currentResponse = ''
-        console.log('🚀 [AI生成] 开始调用AI服务生成回答...')
         const fullResponse = await aiService.generateResponse(
           messages,
           // 进度回调 - 流式更新内容
           (content) => {
-            if (verboseAIDebug) {
-              console.log('🚀 [AI生成] 流式更新:', content)
-            }
             currentResponse += content
             this.updateAIResponseContent(aiNodeId, currentResponse, false)
           },
@@ -371,28 +309,21 @@ export default {
             if (this.$bus) {
               this.$bus.$emit('ai_reasoning_update', reasoning)
             }
-            if (verboseAIDebug) {
-              console.log('🚀 [AI生成] AI思考过程:', reasoning)
-            }
           }
         )
-        console.log('🚀 [AI生成] AI服务调用完成，完整回答:', fullResponse)
 
         // 最终更新并标记完成
         const finalContent = fullResponse || currentResponse || '回答生成完成'
         this.updateAIResponseContent(aiNodeId, finalContent, true)
-        
-        console.log(`🚀 [AI生成] 节点 ${nodeId} 的AI回答生成完成`)
-        
+
       } catch (error) {
-        console.error('🚀 [AI生成] AI回答生成失败:', error)
+        console.error('AI回答生成失败:', error)
         const aiNodeId = this.aiResponseNodes.get(nodeId)
         if (aiNodeId) {
           this.handleAIResponseError(aiNodeId, error)
         }
       } finally {
         this.pendingAIRequests.delete(nodeId)
-        console.log('🚀 [AI生成] 已从待处理请求列表中移除')
       }
     },
 
@@ -403,53 +334,29 @@ export default {
      * @returns {Promise<Object|null>} 创建的AI回答节点
      */
     async createAIResponseNode(parentNode, initialText = '🤖 正在思考中...') {
-      console.log('🏗️ [节点创建] 开始创建AI回答节点')
-      console.log('🏗️ [节点创建] 父节点:', parentNode)
-      console.log('🏗️ [节点创建] 初始文本:', initialText)
-      
+
       try {
         if (!this.mindMap) {
-          console.error('🏗️ [节点创建] mindMap实例不存在')
           return null
         }
-        console.log('🏗️ [节点创建] mindMap实例存在:', this.mindMap)
-
-        // 生成唯一ID（使用simple-mind-map的工具函数或自定义）
-        const uid = this.generateNodeId()
-        console.log('🏗️ [节点创建] 生成的节点ID:', uid)
 
         // 使用思维导图API创建子节点
-        console.log('🏗️ [节点创建] 正在执行INSERT_CHILD_NODE命令...')
-        // INSERT_CHILD_NODE参数：openEdit, appointNodes, appointData, appointChildren
-        // openEdit: 是否打开编辑模式
-        // appointNodes: 指定节点数组（为哪些节点添加子节点）
-        // appointData: 新节点的数据
-        // appointChildren: 子节点的子节点数组
         this.mindMap.execCommand('INSERT_CHILD_NODE', false, [parentNode], {
           text: initialText,
           isAIResponse: true,
           aiStatus: 'loading'
-          // 不强制指定uid，让系统自动生成
         }, [])
-        console.log('🏗️ [节点创建] INSERT_CHILD_NODE命令执行完成')
-        
-        // 获取创建的节点实例 - 直接查找最新AI子节点
-        console.log('🏗️ [节点创建] 正在查找创建的节点...')
+
+        // 获取创建的节点实例
         const aiNode = await this.findLatestAIChildNode(parentNode)
-        console.log('🏗️ [节点创建] 查找结果:', aiNode)
-        
+
         if (aiNode) {
-          const actualUid = aiNode.getData('uid') || aiNode.uid
-          console.log(`🏗️ [节点创建] ✅ AI回答节点创建成功，实际ID: ${actualUid}`)
-          // 更新UID映射
           return aiNode
-        } else {
-          console.warn(`🏗️ [节点创建] ⚠️ 未找到创建的AI节点`)
         }
-        
+
         return aiNode
       } catch (error) {
-        console.error('🏗️ [节点创建] ❌ 创建AI回答节点失败:', error)
+        console.error('创建AI回答节点失败:', error)
         return null
       }
     },
@@ -470,9 +377,6 @@ export default {
 
         // 检查是否包含markdown格式
         const hasMarkdown = this.detectMarkdownFormat(content)
-        if (verboseAIDebug) {
-          console.log('🎨 [Markdown渲染] 检测到markdown格式:', hasMarkdown)
-        }
 
         let formattedContent
         if (hasMarkdown && isComplete) {
@@ -480,18 +384,17 @@ export default {
           try {
             const htmlContent = this.convertMarkdownToRichText(content)
             formattedContent = htmlContent
-            console.log('🎨 [Markdown渲染] 转换为富文本:', htmlContent)
-            
+
             // 设置为富文本节点
             this.mindMap.execCommand('SET_NODE_DATA', node, {
               richText: true,
               aiStatus: 'complete'
             })
-            
+
             // 更新节点文本（富文本格式）
             this.mindMap.execCommand('SET_NODE_TEXT', node, formattedContent, true)
           } catch (error) {
-            console.error('🎨 [Markdown渲染] 转换失败，使用原文本:', error)
+            console.error('Markdown转换失败，使用原文本:', error)
             formattedContent = content
             this.mindMap.execCommand('SET_NODE_TEXT', node, formattedContent)
             this.mindMap.execCommand('SET_NODE_DATA', node, {
@@ -593,29 +496,23 @@ export default {
           // 使用marked.parse方法
           html = marked.parse(markdown)
         } else {
-          console.warn('🎨 [Markdown渲染] marked库调用方式不明确，使用降级方案')
           // 使用简单的降级方案
           html = this.simpleMarkdownToHtml(markdown)
         }
-        
-        console.log('🎨 [Markdown渲染] 原始HTML输出:', html.substring(0, 200) + '...')
-        
+
         // 将HTML转换为适合思维导图富文本的格式
         html = this.formatRichTextForMindMap(html)
-        
+
         return html
       } catch (error) {
-        console.error('🎨 [Markdown渲染] marked转换失败:', error)
-        console.error('🎨 [Markdown渲染] marked对象:', marked)
-        console.error('🎨 [Markdown渲染] marked类型:', typeof marked)
-        
-        console.log('🎨 [Markdown渲染] 使用降级方案渲染markdown')
+        console.error('marked转换失败:', error)
+
         // 如果marked转换失败，使用简单的降级方案
         try {
           const html = this.simpleMarkdownToHtml(markdown)
           return this.formatRichTextForMindMap(html)
         } catch (fallbackError) {
-          console.error('🎨 [Markdown渲染] 降级方案也失败:', fallbackError)
+          console.error('降级方案也失败:', fallbackError)
           // 最后的降级：基本HTML包装
           return `<p>${markdown.replace(/\n/g, '<br>')}</p>`
         }
@@ -1046,46 +943,25 @@ export default {
      * @param {string} oldText - 旧文本
      */
     handleNodeTextEditEnd(node, newText, oldText) {
-      console.log('🔍 [AI调试] 节点文本编辑完成事件触发')
-      const hasAIChild = node.children && node.children.some(child => child.getData('isAIResponse'))
-      console.log('🔍 [AI调试] 节点信息:', {
-        node: node,
-        newText: newText,
-        oldText: oldText,
-        nodeId: node ? (node.getData('uid') || node.uid) : 'unknown',
-        isAIResponse: node ? node.getData('isAIResponse') : false,
-        hasAIChild: hasAIChild,
-        textChanged: newText !== oldText
-      })
 
       // 检查文本是否为空
       if (!newText || newText.trim() === '') {
-        console.log('🔍 [AI调试] 跳过：文本为空')
         return
       }
-      
+
       // 不为AI回答节点生成回答
       if (node.getData('isAIResponse')) {
-        console.log('🔍 [AI调试] 跳过：当前节点是AI回答节点')
         return
       }
-      
+
       // 判断是否需要生成AI回答
       const shouldGenerate = this.shouldGenerateAIResponse(newText)
-      console.log('🔍 [AI调试] 智能判断结果:', {
-        text: newText,
-        shouldGenerate: shouldGenerate,
-        aiEnabled: this.aiResponseEnabled
-      })
-      
+
       if (shouldGenerate) {
-        console.log('🔍 [AI调试] 准备生成AI回答...')
         // 延迟执行，确保节点编辑完全完成
         this.$nextTick(() => {
           this.generateAIResponse(node, newText)
         })
-      } else {
-        console.log('🔍 [AI调试] 不满足AI回答生成条件')
       }
     },
 
