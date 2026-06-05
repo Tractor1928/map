@@ -580,6 +580,8 @@ class MindMapNode {
         .move(icon2X, icon2Y)
 
       // 添加文字（居中在椭圆图标内）
+      // 使用 x/y 属性而非 .move()，这样 text-anchor: middle 和 dominant-baseline: central
+      // 才能正确地将文字的中心点对齐到给定的坐标位置
       const howtoTextX = icon2X + howtoIconWidth / 2
       const howtoTextY = icon2Y + howtoIconHeight / 2
 
@@ -592,15 +594,16 @@ class MindMapNode {
         .fill('#ffffff')
         .addClass('smm-howto-icon-text')
         .attr({
+          'x': howtoTextX,
+          'y': howtoTextY,
           'text-anchor': 'middle',
-          'dy': '0.35em',
+          'dominant-baseline': 'central',
           'cursor': 'pointer',
           'pointer-events': 'auto'
         })
         .css({
           userSelect: 'none'
         })
-        .move(howtoTextX, howtoTextY)
 
       // 添加 title 提示
       this.howtoIcon.node.setAttribute('title', '询问怎么实现的')
