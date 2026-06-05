@@ -566,6 +566,17 @@ class MindMapNode {
       // 第二个图标也添加动画效果
       this.howtoIcon.animate(200, 0).scale(1.1).animate(200, 0).scale(1)
 
+      // 修复：SVG.js 内部会在 <text> 中创建 <tspan>，需要强制穿透
+      const fixTspanPointerEvents = (textEl) => {
+        if (!textEl?.node) return
+        const tspans = textEl.node.querySelectorAll('tspan')
+        tspans.forEach(t => {
+          t.style.setProperty('pointer-events', 'none', 'important')
+        })
+      }
+      fixTspanPointerEvents(this.questionIconText)
+      fixTspanPointerEvents(this.howtoIconText)
+
       // ===== DEBUG：排查图标文字光标问题 =====
       this._debugCursorOnTextElements()
 
