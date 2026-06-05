@@ -308,6 +308,13 @@ export const cssContent = `
     pointer-events: none !important;
   }
 
+  /* 必须单独处理 tspan：SVG.js 会在 text 内部自动创建 tspan， */
+  /* 而全局 tspan 规则 (.smm-node tspan:not(...)) 的 specificity 更高会覆盖上面 * 选择器 */
+  .smm-node .smm-question-icon-text tspan,
+  .smm-node .smm-howto-icon-text tspan {
+    pointer-events: none !important;
+  }
+
   /* "怎么实现的"图标样式 */
   .smm-howto-icon {
     z-index: 1000;
