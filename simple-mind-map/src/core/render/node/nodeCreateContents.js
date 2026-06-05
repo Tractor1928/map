@@ -138,6 +138,10 @@ function createRichTextNode(specifyText) {
   }
   let { textAutoWrapWidth, emptyTextMeasureHeightText } = this.mindMap.opt
   textAutoWrapWidth = hasCustomWidth ? this.customTextWidth : textAutoWrapWidth
+  // AI回答节点使用双倍最大宽度
+  if (!hasCustomWidth && this.getData('isAIResponse')) {
+    textAutoWrapWidth = textAutoWrapWidth * 2
+  }
   const g = new G()
   // 创建富文本结构，或复位富文本样式
   let recoverText = false
@@ -252,6 +256,8 @@ function createTextNode(specifyText) {
   }
   const { textAutoWrapWidth: maxWidth, emptyTextMeasureHeightText } =
     this.mindMap.opt
+  // AI回答节点使用双倍最大宽度
+  const actualMaxWidth = this.getData('isAIResponse') ? maxWidth * 2 : maxWidth
   let isMultiLine = textArr.length > 1
   textArr.forEach((item, index) => {
     let arr = item.split('')
@@ -260,7 +266,7 @@ function createTextNode(specifyText) {
     while (arr.length) {
       let str = arr.shift()
       let text = [...line, str].join('')
-      if (measureText(text, this.style).width <= maxWidth) {
+      if (measureText(text, this.style).width <= actualMaxWidth) {
         line.push(str)
       } else {
         lines.push(line.join(''))
@@ -307,7 +313,7 @@ function createTextNode(specifyText) {
     const tmpBbox = tmpNode.bbox()
     height = tmpBbox.height
   }
-  width = Math.min(Math.ceil(width), maxWidth)
+  width = Math.min(Math.ceil(width), actualMaxWidth)
   height = Math.ceil(height)
   g.attr('data-width', width)
   g.attr('data-height', height)
