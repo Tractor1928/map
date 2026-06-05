@@ -34,11 +34,34 @@ class Formula {
   }
 
   init() {
+    // 渲染时预处理公式：将 [...] 包裹的 LaTeX 公式转换为 KaTeX 渲染的 HTML
+    this.mindMap.opt.transformRichTextOnRender =
+      this.transformRichTextOnRender.bind(this)
     if (this.mindMap.opt.enableEditFormulaInRichTextEdit) {
       this.mindMap.opt.transformRichTextOnEnterEdit =
         this.latexRichToText.bind(this)
       this.mindMap.opt.beforeHideRichTextEdit = this.formatLatex.bind(this)
     }
+  }
+
+  // 渲染节点前预处理LaTeX公式：查找 [...] 包裹的公式块，交给KaTeX渲染
+  transformRichTextOnRender(html) {
+    if (!html || typeof html !== 'string') return html
+    return html.replace(/\[([^\]]+)\]/g, (match, formula) => {
+      // 过滤掉太短的内容和不含LaTeX命令的普通括号文本
+      if (formula.length < 5) return match
+      if (!/\\[a-zA-Z]+/.test(formula)) return match
+      // 清理 <br> 标签
+      const cleaned = formula.replace(/<br\s*\/?>/gi, ' ').trim()
+      if (!cleaned) return match
+      try {
+        const rendered = katex.renderToString(cleaned, this.config)
+        return `<span class="ql-formula" data-value="${htmlEscape(cleaned)}">${rendered}</span>`
+      } catch (e) {
+        // KaTeX无法渲染则保持原文
+        return match
+      }
+    })
   }
 
   // 获取katex配置

@@ -131,6 +131,11 @@ function createRichTextNode(specifyText) {
   const hasCustomWidth = this.hasCustomWidth()
   let text =
     typeof specifyText === 'string' ? specifyText : this.getData('text')
+  // 渲染前对文本进行预处理（如公式渲染）
+  const { transformRichTextOnRender } = this.mindMap.opt
+  if (typeof transformRichTextOnRender === 'function') {
+    text = transformRichTextOnRender(text)
+  }
   let { textAutoWrapWidth, emptyTextMeasureHeightText } = this.mindMap.opt
   textAutoWrapWidth = hasCustomWidth ? this.customTextWidth : textAutoWrapWidth
   const g = new G()

@@ -490,6 +490,8 @@ export const defaultOpt = {
   // 【RichText插件】
   // 转换富文本内容，当进入富文本编辑时，可以通过该参数传递一个函数，函数接收文本内容，需要返回你处理后的文本内容
   transformRichTextOnEnterEdit: null,
+  // 渲染富文本节点前对文本进行预处理，例如将 [...] 包裹的LaTeX公式转换为KaTeX渲染的HTML。函数接收原始HTML字符串，需要返回处理后的HTML字符串
+  transformRichTextOnRender: null,
   // 可以传递一个函数，即将结束富文本编辑前会执行该函数，函数接收richText实例，所以你可以在此时机更新quill文档数据
   beforeHideRichTextEdit: null,
 
