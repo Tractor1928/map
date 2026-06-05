@@ -442,22 +442,22 @@ class MindMapNode {
       const iconSize = 24
       const howtoIconWidth = 100 // "怎么实现的？"椭圆宽度
       const howtoIconHeight = 24 // 椭圆高度（与圆形一致）
-      const iconGap = 8 // 两个图标之间的间距
+      const iconGap = 6 // 两个图标之间的间距
 
-      // 边界检查，确保图标在节点范围内（为两个图标预留空间）
+      // 边界检查，确保图标在节点范围内（上下排列，按较宽的howto图标计算水平边界）
       const minX = 5
-      const maxX = this.width - iconSize - howtoIconWidth - iconGap - 5
-      const minY = -iconSize - 5
+      const maxX = this.width - howtoIconWidth - 5
+      const minY = -iconSize - howtoIconHeight - iconGap - 5
       const maxY = this.height - 5
 
       // 应用边界限制
       iconX = Math.max(minX, Math.min(maxX, iconX))
       iconY = Math.max(minY, Math.min(maxY, iconY))
 
-      // 第二个图标的位置
-      const icon2X = iconX + iconSize + iconGap
-      const icon2Y = iconY
-      
+      // 第二个图标的位置：上下排列，下方为椭圆
+      const icon2X = iconX
+      const icon2Y = iconY + iconSize + iconGap
+
       // 创建问号图标
       this.questionIcon = this.group.circle(iconSize)
         .fill('#1890ff')
@@ -593,7 +593,7 @@ class MindMapNode {
         .addClass('smm-howto-icon-text')
         .attr({
           'text-anchor': 'middle',
-          'dominant-baseline': 'central',
+          'dy': '0.35em',
           'cursor': 'pointer',
           'pointer-events': 'auto'
         })
