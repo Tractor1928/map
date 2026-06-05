@@ -577,9 +577,6 @@ class MindMapNode {
       fixTspanPointerEvents(this.questionIconText)
       fixTspanPointerEvents(this.howtoIconText)
 
-      // ===== DEBUG：排查图标文字光标问题 =====
-      this._debugCursorOnTextElements()
-
       // 设置全局点击监听，点击其他地方时隐藏图标
       this.setupGlobalClickListener()
       
@@ -620,67 +617,6 @@ class MindMapNode {
 
     } catch (error) {
       console.error('隐藏问号图标失败:', error)
-    }
-  }
-
-  // DEBUG：排查图标文字光标问题
-  _debugCursorOnTextElements() {
-    // 1. 文字元素状态
-    const textEls = [
-      { name: 'questionIconText', el: this.questionIconText?.node },
-      { name: 'howtoIconText', el: this.howtoIconText?.node }
-    ]
-    textEls.forEach(({ name, el }) => {
-      if (!el) return
-      const cs = window.getComputedStyle(el)
-      console.log(`[CURSOR-DEBUG] ${name}:`, {
-        inline_pointerEvents: el.style.pointerEvents || '(empty)',
-        inline_cursor: el.style.cursor || '(empty)',
-        computed_pointerEvents: cs.pointerEvents,
-        computed_cursor: cs.cursor
-      })
-    })
-
-    // 2. 图标形状元素状态
-    const shapeEls = [
-      { name: 'questionIcon(circle)', el: this.questionIcon?.node },
-      { name: 'howtoIcon(rect)', el: this.howtoIcon?.node }
-    ]
-    shapeEls.forEach(({ name, el }) => {
-      if (!el) return
-      const cs = window.getComputedStyle(el)
-      console.log(`[CURSOR-DEBUG] ${name}:`, {
-        inline_pointerEvents: el.style.pointerEvents || '(empty)',
-        inline_cursor: el.style.cursor || '(empty)',
-        computed_pointerEvents: cs.pointerEvents,
-        computed_cursor: cs.cursor,
-        attr_pointerEvents: el.getAttribute('pointer-events')
-      })
-    })
-
-    // 3. 用 elementsFromPoint 检测：鼠标当前位置实际命中的元素栈
-    if (this.questionIcon?.node) {
-      const rect = this.questionIcon.node.getBoundingClientRect()
-      const cx = rect.left + rect.width / 2
-      const cy = rect.top + rect.height / 2
-      const els = document.elementsFromPoint(cx, cy)
-      console.log(`[CURSOR-DEBUG] elementsFromPoint(${Math.round(cx)}, ${Math.round(cy)}):`,
-        els.slice(0, 5).map(e => ({
-          tag: e.tagName,
-          class: e.getAttribute('class') || e.className?.baseVal || '',
-          pointerEvents: window.getComputedStyle(e).pointerEvents,
-          cursor: window.getComputedStyle(e).cursor
-        }))
-      )
-    }
-
-    // 4. 检查 group 自身的 cursor
-    if (this.group?.node) {
-      const cs = window.getComputedStyle(this.group.node)
-      console.log(`[CURSOR-DEBUG] group(smm-node):`, {
-        inline_cursor: this.group.node.style.cursor || '(empty)',
-        computed_cursor: cs.cursor
-      })
     }
   }
 
