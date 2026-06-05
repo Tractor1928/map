@@ -566,6 +566,9 @@ class MindMapNode {
       // 第二个图标也添加动画效果
       this.howtoIcon.animate(200, 0).scale(1.1).animate(200, 0).scale(1)
 
+      // ===== DEBUG：排查图标文字光标问题 =====
+      this._debugCursorOnTextElements()
+
       // 设置全局点击监听，点击其他地方时隐藏图标
       this.setupGlobalClickListener()
       
@@ -607,6 +610,53 @@ class MindMapNode {
     } catch (error) {
       console.error('隐藏问号图标失败:', error)
     }
+  }
+
+  // DEBUG：打印文字元素的光标/pointer-events相关属性，排查cursor未变为pointer的原因
+  _debugCursorOnTextElements() {
+    const textEls = [
+      { name: 'questionIconText', el: this.questionIconText?.node },
+      { name: 'howtoIconText', el: this.howtoIconText?.node }
+    ]
+    textEls.forEach(({ name, el }) => {
+      if (!el) return
+      const cs = window.getComputedStyle(el)
+      console.log(`[CURSOR-DEBUG] ${name}:`, {
+        tag: el.tagName,
+        class: el.getAttribute('class'),
+        inline_pointerEvents: el.style.pointerEvents,
+        inline_cursor: el.style.cursor,
+        computed_pointerEvents: cs.pointerEvents,
+        computed_cursor: cs.cursor,
+        attr_pointerEvents: el.getAttribute('pointer-events'),
+        attr_cursor: el.getAttribute('cursor')
+      })
+      // 检查是否被 !important 规则覆盖
+      const sheets = document.styleSheets
+      const matchedRules = []
+      for (let i = 0; i < sheets.length; i++) {
+        try {
+          const rules = sheets[i].cssRules || sheets[i].rules
+          for (let j = 0; j < rules.length; j++) {
+            const rule = rules[j]
+            if (rule.selectorText && el.matches && el.matches(rule.selectorText)) {
+              if (rule.style.cursor || rule.style.pointerEvents) {
+                matchedRules.push({
+                  selector: rule.selectorText,
+                  cursor: rule.style.cursor,
+                  pointerEvents: rule.style.pointerEvents,
+                  important: rule.style.getPropertyPriority('cursor') === 'important' ||
+                             rule.style.getPropertyPriority('pointer-events') === 'important'
+                })
+              }
+            }
+          }
+        } catch (e) { /* cross-origin */ }
+      }
+      if (matchedRules.length > 0) {
+        console.log(`[CURSOR-DEBUG] ${name} 匹配的CSS规则:`, matchedRules)
+      }
+    })
   }
 
   // 问号图标点击事件
