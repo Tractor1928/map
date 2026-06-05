@@ -440,11 +440,13 @@ class MindMapNode {
       let iconX = canvasX - this.left + 5
       let iconY = canvasY - this.top - 30
       const iconSize = 24
+      const howtoIconWidth = 100 // "怎么实现的？"椭圆宽度
+      const howtoIconHeight = 24 // 椭圆高度（与圆形一致）
       const iconGap = 8 // 两个图标之间的间距
 
       // 边界检查，确保图标在节点范围内（为两个图标预留空间）
       const minX = 5
-      const maxX = this.width - iconSize * 2 - iconGap - 5
+      const maxX = this.width - iconSize - howtoIconWidth - iconGap - 5
       const minY = -iconSize - 5
       const maxY = this.height - 5
 
@@ -566,7 +568,8 @@ class MindMapNode {
       this.questionIcon.animate(200, 0).scale(1.1).animate(200, 0).scale(1)
 
       // ===== 创建第二个图标："是怎么实现的？" =====
-      this.howtoIcon = this.group.circle(iconSize)
+      this.howtoIcon = this.group.rect(howtoIconWidth, howtoIconHeight)
+        .radius(howtoIconHeight / 2) // 椭圆/药丸形状
         .fill('#fa8c16')
         .stroke({ color: '#ffffff', width: 2 })
         .addClass('smm-howto-icon')
@@ -576,14 +579,14 @@ class MindMapNode {
         })
         .move(icon2X, icon2Y)
 
-      // 添加齿轮符号文字（居中在圆形图标内）
-      const howtoTextX = icon2X + iconSize / 2
-      const howtoTextY = icon2Y + iconSize / 2
+      // 添加文字（居中在椭圆图标内）
+      const howtoTextX = icon2X + howtoIconWidth / 2
+      const howtoTextY = icon2Y + howtoIconHeight / 2
 
-      this.howtoIconText = this.group.text('⚙') // ⚙ 齿轮符号
+      this.howtoIconText = this.group.text('怎么实现的？')
         .font({
-          size: 18,
-          family: 'Arial, sans-serif',
+          size: 14,
+          family: 'PingFang SC, Microsoft YaHei, sans-serif',
           weight: 'bold'
         })
         .fill('#ffffff')
@@ -600,8 +603,8 @@ class MindMapNode {
         .move(howtoTextX, howtoTextY)
 
       // 添加 title 提示
-      this.howtoIcon.node.setAttribute('title', '怎么实现的？')
-      this.howtoIconText.node.setAttribute('title', '怎么实现的？')
+      this.howtoIcon.node.setAttribute('title', '询问怎么实现的')
+      this.howtoIconText.node.setAttribute('title', '询问怎么实现的')
 
       // 直接设置DOM元素的内联样式
       this.howtoIconText.node.style.cursor = 'pointer'
