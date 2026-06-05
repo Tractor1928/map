@@ -252,9 +252,9 @@ export const cssContent = `
   }
 
   /* 关键修复：使SVG文本可选择 */
-  .smm-node svg text:not(.smm-question-icon-text),
+  .smm-node svg text:not(.smm-question-icon-text):not(.smm-howto-icon-text),
   .smm-node text.smm-text-node-wrap,
-  .smm-node tspan:not(.smm-question-icon-text),
+  .smm-node tspan:not(.smm-question-icon-text):not(.smm-howto-icon-text),
   .smm-node foreignObject,
   .smm-node foreignObject * {
     user-select: text !important;
@@ -305,6 +305,27 @@ export const cssContent = `
   .smm-node .smm-question-icon-text,
   text.smm-question-icon-text,
   .smm-question-icon-text * {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
+  /* "怎么实现的"图标样式 */
+  .smm-howto-icon {
+    z-index: 1000;
+    transition: all 0.2s ease;
+  }
+
+  .smm-howto-icon-text {
+    z-index: 1001;
+    user-select: none;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+
+  /* 超高优先级：确保howto图标文字永远是手型光标 */
+  .smm-node .smm-howto-icon-text,
+  text.smm-howto-icon-text,
+  .smm-howto-icon-text * {
     cursor: pointer !important;
     pointer-events: auto !important;
   }

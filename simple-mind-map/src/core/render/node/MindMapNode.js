@@ -379,26 +379,26 @@ class MindMapNode {
   }
 
   // 从选中文字创建提问节点
-  createQuestionNodeFromSelection(selectedText) {
+  createQuestionNodeFromSelection(selectedText, suffix = '?') {
     try {
       // 生成唯一ID（使用simple-mind-map的工具函数）
       const uid = 'question_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-      
+
       // 创建子节点数据
       const questionNodeData = {
-        text: selectedText + '?',
+        text: selectedText + suffix,
         isQuestion: true, // 标记为提问节点
         uid: uid
       }
-      
+
       // 使用思维导图API创建子节点
       this.mindMap.execCommand('INSERT_CHILD_NODE', false, [this], questionNodeData, [])
-      
+
       // 延迟查找创建的节点并触发AI回答
       setTimeout(() => {
-        this.findAndTriggerAIResponse(uid, selectedText)
+        this.findAndTriggerAIResponse(uid, selectedText + suffix)
       }, 100)
-      
+
     } catch (error) {
       console.error('创建提问节点失败:', error)
     }
@@ -440,16 +440,21 @@ class MindMapNode {
       let iconX = canvasX - this.left + 5
       let iconY = canvasY - this.top - 30
       const iconSize = 24
-      
-      // 边界检查，确保图标在节点范围内
+      const iconGap = 8 // 两个图标之间的间距
+
+      // 边界检查，确保图标在节点范围内（为两个图标预留空间）
       const minX = 5
-      const maxX = this.width - iconSize - 5
+      const maxX = this.width - iconSize * 2 - iconGap - 5
       const minY = -iconSize - 5
       const maxY = this.height - 5
-      
+
       // 应用边界限制
       iconX = Math.max(minX, Math.min(maxX, iconX))
       iconY = Math.max(minY, Math.min(maxY, iconY))
+
+      // 第二个图标的位置
+      const icon2X = iconX + iconSize + iconGap
+      const icon2Y = iconY
       
       // 创建问号图标
       this.questionIcon = this.group.circle(iconSize)
@@ -504,6 +509,7 @@ class MindMapNode {
       
       // 强制设置问号图标的鼠标样式
       this.questionIcon.on('mouseover', (e) => {
+        e.stopPropagation()
         e.target.style.cursor = 'pointer'
         this.questionIcon.css({ cursor: 'pointer' })
       })
@@ -544,13 +550,105 @@ class MindMapNode {
       })
       
       this.questionIconText.on('mouseout', (e) => {
-        // 恢复父组的默认cursor
+        // 如果鼠标移向问号图标圆圈或howto图标，保持手型光标
+        const relatedTarget = e.relatedTarget
+        if (relatedTarget && relatedTarget.closest && (
+          relatedTarget.closest('.smm-question-icon') ||
+          relatedTarget.closest('.smm-howto-icon')
+        )) {
+          return
+        }
+        // 恢复父组的默认光标
         this.group.css({ cursor: 'default' })
       })
       
       // 添加动画效果
       this.questionIcon.animate(200, 0).scale(1.1).animate(200, 0).scale(1)
-      
+
+      // ===== 创建第二个图标："是怎么实现的？" =====
+      this.howtoIcon = this.group.circle(iconSize)
+        .fill('#fa8c16')
+        .stroke({ color: '#ffffff', width: 2 })
+        .addClass('smm-howto-icon')
+        .css({
+          cursor: 'pointer',
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+        })
+        .move(icon2X, icon2Y)
+
+      // 添加齿轮符号文字（居中在圆形图标内）
+      const howtoTextX = icon2X + iconSize / 2
+      const howtoTextY = icon2Y + iconSize / 2
+
+      this.howtoIconText = this.group.text('⚙') // ⚙ 齿轮符号
+        .font({
+          size: 18,
+          family: 'Arial, sans-serif',
+          weight: 'bold'
+        })
+        .fill('#ffffff')
+        .addClass('smm-howto-icon-text')
+        .attr({
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central',
+          'cursor': 'pointer',
+          'pointer-events': 'auto'
+        })
+        .css({
+          userSelect: 'none'
+        })
+        .move(howtoTextX, howtoTextY)
+
+      // 添加 title 提示
+      this.howtoIcon.node.setAttribute('title', '怎么实现的？')
+      this.howtoIconText.node.setAttribute('title', '怎么实现的？')
+
+      // 直接设置DOM元素的内联样式
+      this.howtoIconText.node.style.cursor = 'pointer'
+      this.howtoIconText.node.style.pointerEvents = 'auto'
+      this.howtoIcon.node.style.cursor = 'pointer'
+
+      // 绑定点击事件
+      this.howtoIcon.on('click', (e) => {
+        e.stopPropagation()
+        this.onHowToIconClick()
+      })
+
+      this.howtoIconText.on('click', (e) => {
+        e.stopPropagation()
+        this.onHowToIconClick()
+      })
+
+      // 鼠标事件：确保手型光标
+      this.howtoIcon.on('mouseover', (e) => {
+        e.stopPropagation()
+        e.target.style.cursor = 'pointer'
+        this.howtoIcon.css({ cursor: 'pointer' })
+      })
+
+      this.howtoIconText.on('mouseover', (e) => {
+        e.stopPropagation()
+        e.target.style.cursor = 'pointer'
+        this.howtoIconText.css({ cursor: 'pointer' })
+        this.group.css({ cursor: 'pointer' })
+      })
+
+      this.howtoIconText.on('mouseout', (e) => {
+        // 如果鼠标移向问号图标或howto图标圆圈，保持手型光标
+        const relatedTarget = e.relatedTarget
+        if (relatedTarget && relatedTarget.closest && (
+          relatedTarget.closest('.smm-question-icon') ||
+          relatedTarget.closest('.smm-howto-icon')
+        )) {
+          return
+        }
+        // 恢复父组的默认光标
+        this.group.css({ cursor: 'default' })
+      })
+
+      // 第二个图标也添加动画效果
+      this.howtoIcon.animate(200, 0).scale(1.1).animate(200, 0).scale(1)
+
       // 设置全局点击监听，点击其他地方时隐藏图标
       this.setupGlobalClickListener()
       
@@ -566,19 +664,29 @@ class MindMapNode {
         this.questionIcon.remove()
         this.questionIcon = null
       }
-      
+
       if (this.questionIconText) {
         this.questionIconText.remove()
         this.questionIconText = null
       }
-      
+
+      if (this.howtoIcon) {
+        this.howtoIcon.remove()
+        this.howtoIcon = null
+      }
+
+      if (this.howtoIconText) {
+        this.howtoIconText.remove()
+        this.howtoIconText = null
+      }
+
       // 清理选择数据
       this.selectedTextForQuestion = null
       this.selectedRange = null
-      
+
       // 移除全局点击监听
       this.removeGlobalClickListener()
-      
+
     } catch (error) {
       console.error('隐藏问号图标失败:', error)
     }
@@ -608,12 +716,38 @@ class MindMapNode {
     }
   }
 
+  // "怎么实现的"图标点击事件
+  onHowToIconClick() {
+    try {
+      if (!this.selectedTextForQuestion) {
+        return
+      }
+
+      // 创建提问节点（使用"是怎么实现的？"后缀）
+      this.createQuestionNodeFromSelection(this.selectedTextForQuestion, '是怎么实现的？')
+
+      // 隐藏所有图标
+      this.hideQuestionIcon()
+
+      // 清除文字选择
+      const selection = window.getSelection()
+      if (selection) {
+        selection.removeAllRanges()
+      }
+
+    } catch (error) {
+      console.error('处理"怎么实现"点击事件失败:', error)
+    }
+  }
+
   // 设置全局点击监听
   setupGlobalClickListener() {
     this.globalClickHandler = (e) => {
-      // 如果点击的不是问号图标或其父节点，则隐藏图标
-      if (!e.target.closest('.smm-question-icon') && 
-          !e.target.closest('.smm-question-icon-text')) {
+      // 如果点击的不是问号图标、howto图标或其父节点，则隐藏图标
+      if (!e.target.closest('.smm-question-icon') &&
+          !e.target.closest('.smm-question-icon-text') &&
+          !e.target.closest('.smm-howto-icon') &&
+          !e.target.closest('.smm-howto-icon-text')) {
         this.hideQuestionIcon()
       }
     }
@@ -1004,12 +1138,17 @@ class MindMapNode {
         // 为文本区域设置文本光标
         this.group.on('mouseover', (e) => {
           const target = e.target
-          // 检查是否是问号图标文字，如果是则不修改cursor
-          if (target.classList && target.classList.contains('smm-question-icon-text')) {
+          // 检查是否是问号图标或howto图标相关元素，如果是则不修改光标
+          if (target.closest && (
+            target.closest('.smm-question-icon-text') ||
+            target.closest('.smm-question-icon') ||
+            target.closest('.smm-howto-icon-text') ||
+            target.closest('.smm-howto-icon')
+          )) {
             return
           }
-          if (target.tagName === 'text' || target.tagName === 'tspan' || 
-              target.closest('.smm-text-node-wrap') || 
+          if (target.tagName === 'text' || target.tagName === 'tspan' ||
+              target.closest('.smm-text-node-wrap') ||
               target.closest('foreignObject')) {
             this.group.css({ cursor: 'text' })
           } else {
