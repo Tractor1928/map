@@ -76,11 +76,12 @@ class View {
       ) {
         return customHandleMousewheel(e)
       }
-      // 1.鼠标滚轮事件控制缩放
+      // 1.鼠标滚轮事件控制缩放（按住Shift键时不缩放，用于横向滚动）
       if (
-        mousewheelAction === CONSTANTS.MOUSE_WHEEL_ACTION.ZOOM ||
+        !e.shiftKey &&
+        (mousewheelAction === CONSTANTS.MOUSE_WHEEL_ACTION.ZOOM ||
         e.ctrlKey ||
-        e.metaKey
+        e.metaKey)
       ) {
         if (disableMouseWheelZoom) return
         const { x: clientX, y: clientY } = this.mindMap.toPos(
@@ -126,21 +127,41 @@ class View {
         }
         let mx = 0
         let my = 0
-        // 上移
-        if (dirs.includes(CONSTANTS.DIR.DOWN)) {
-          my = -stepY
-        }
-        // 下移
-        if (dirs.includes(CONSTANTS.DIR.UP)) {
-          my = stepY
-        }
-        // 右移
-        if (dirs.includes(CONSTANTS.DIR.LEFT)) {
-          mx = stepX
-        }
-        // 左移
-        if (dirs.includes(CONSTANTS.DIR.RIGHT)) {
-          mx = -stepX
+        // 按住Shift键时，滚轮上下控制左右滚动，滚轮左右控制上下滚动
+        if (e.shiftKey) {
+          // 上移 → 左移
+          if (dirs.includes(CONSTANTS.DIR.DOWN)) {
+            mx = -stepY
+          }
+          // 下移 → 右移
+          if (dirs.includes(CONSTANTS.DIR.UP)) {
+            mx = stepY
+          }
+          // 左移 → 下移
+          if (dirs.includes(CONSTANTS.DIR.LEFT)) {
+            my = stepX
+          }
+          // 右移 → 上移
+          if (dirs.includes(CONSTANTS.DIR.RIGHT)) {
+            my = -stepX
+          }
+        } else {
+          // 上移
+          if (dirs.includes(CONSTANTS.DIR.DOWN)) {
+            my = -stepY
+          }
+          // 下移
+          if (dirs.includes(CONSTANTS.DIR.UP)) {
+            my = stepY
+          }
+          // 右移
+          if (dirs.includes(CONSTANTS.DIR.LEFT)) {
+            mx = stepX
+          }
+          // 左移
+          if (dirs.includes(CONSTANTS.DIR.RIGHT)) {
+            mx = -stepX
+          }
         }
         this.translateXY(mx * translateRatio, my * translateRatio)
       }
