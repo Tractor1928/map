@@ -1,6 +1,7 @@
 <template>
-  <div class="toolbarContainer" :class="{ isDark: isDark }">
-    <div class="toolbar" ref="toolbarRef">
+  <div class="toolbarContainer" :class="{ isDark: isDark, collapsed: !toolbarVisible }">
+    <div class="toolbarWrapper">
+      <div class="toolbar" ref="toolbarRef">
       <!-- 节点操作 -->
       <div class="toolbarBlock">
         <!-- 将新建、打开、另存为移到左侧 -->
@@ -162,6 +163,13 @@
         </div>
       </div>
     </div>
+    <div class="toggleToolbarBtn" @click="toolbarVisible = !toolbarVisible">
+      <span
+        class="iconfont iconjiantouyou"
+        :class="{ hide: !toolbarVisible }"
+      ></span>
+    </div>
+    </div>
     <NodeImage></NodeImage>
     <NodeHyperlink></NodeHyperlink>
     <NodeIcon></NodeIcon>
@@ -220,6 +228,7 @@ export default {
   },
   data() {
     return {
+      toolbarVisible: true,
       isMobile: isMobile(),
       horizontalList: [],
       verticalList: [],
@@ -649,18 +658,24 @@ export default {
       }
     }
   }
-  .toolbar {
+  .toolbarWrapper {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    top: 20px;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .toolbar {
     width: max-content;
     display: flex;
     font-size: 12px;
     font-family: PingFangSC-Regular, PingFang SC;
     font-weight: 400;
     color: rgba(26, 26, 26, 0.8);
-    z-index: 2;
 
     .toolbarBlock {
       display: flex;
@@ -819,6 +834,41 @@ export default {
       .text {
         margin-top: 3px;
       }
+    }
+  }
+
+  .toggleToolbarBtn {
+    width: 35px;
+    height: 22px;
+    background: #409eff;
+    cursor: pointer;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: height 0.2s;
+    flex-shrink: 0;
+
+    span {
+      color: #fff;
+      font-size: 12px;
+      transform: rotateZ(-90deg);
+      transition: transform 0.3s;
+
+      &.hide {
+        transform: rotateZ(90deg);
+      }
+    }
+
+    &:hover {
+      height: 28px;
+    }
+  }
+
+  &.collapsed {
+    .toolbar {
+      display: none;
     }
   }
 }

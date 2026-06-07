@@ -706,7 +706,7 @@ export default {
 .reasoningDrawerTrigger {
   position: fixed;
   right: 20px;
-  bottom: 20px;
+  bottom: 70px;
   z-index: 99999;
   background: #409eff;
   color: #fff;
