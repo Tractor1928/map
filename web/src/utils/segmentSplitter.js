@@ -262,47 +262,47 @@ export function splitContent(text) {
     return [{ title: '', content: trimmed, index: 0 }]
   }
 
-  // 保护代码块
+  // 保护代码块（在整个分段过程中保持占位，最后统一还原）
   const { processed, blocks } = protectCodeBlocks(trimmed)
 
   // 第1层：按 H2 拆分
-  let rawSegments = splitByH2(processed)
+  let segments = splitByH2(processed)
 
-  // 还原代码块
-  rawSegments = rawSegments.map(seg => ({
+  // 第2层：按 H3 拆分过长的段（操作占位符保护的文本）
+  let h3Split = []
+  for (const seg of segments) {
+    if (seg.content.length > 800 && hasH3Headings(seg.content)) {
+      h3Split.push(...splitByH3(seg.title, seg.content))
+    } else {
+      h3Split.push(seg)
+    }
+  }
+
+  // 第3层：按空行拆分过长的段（操作占位符保护的文本）
+  let paraSplit = []
+  for (const seg of h3Split) {
+    if (seg.content.length > 600) {
+      paraSplit.push(...splitByParagraph(seg.title, seg.content))
+    } else {
+      paraSplit.push(seg)
+    }
+  }
+
+  // 第4层：按固定长度强制拆分（操作占位符保护的文本）
+  let lengthSplit = []
+  for (const seg of paraSplit) {
+    if (seg.content.length > 1000) {
+      lengthSplit.push(...splitByLength(seg.title, seg.content))
+    } else {
+      lengthSplit.push(seg)
+    }
+  }
+
+  // ✅ 所有拆分完成后，统一还原代码块
+  let result = lengthSplit.map(seg => ({
     title: seg.title,
     content: restoreCodeBlocks(seg.content, blocks)
   }))
-
-  // 第2层：按 H3 拆分过长的段
-  let segments = []
-  for (const seg of rawSegments) {
-    if (needsH3Split(seg.content)) {
-      segments.push(...splitByH3(seg.title, seg.content))
-    } else {
-      segments.push(seg)
-    }
-  }
-
-  // 第3层：按空行拆分过长的段
-  let finalSegments = []
-  for (const seg of segments) {
-    if (seg.content.length > 600) {
-      finalSegments.push(...splitByParagraph(seg.title, seg.content))
-    } else {
-      finalSegments.push(seg)
-    }
-  }
-
-  // 第4层：按固定长度强制拆分
-  let result = []
-  for (const seg of finalSegments) {
-    if (needsLengthSplit(seg.content)) {
-      result.push(...splitByLength(seg.title, seg.content))
-    } else {
-      result.push(seg)
-    }
-  }
 
   // 过滤空段，添加索引
   result = result

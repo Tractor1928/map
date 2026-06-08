@@ -97,18 +97,60 @@ export function createTreeNavigator() {
     },
 
     /**
-     * 获取节点文本
+     * 获取节点文本（用于分段和显示）
+     *
+     * 如果节点存储的是 HTML 富文本（来自桌面端），会将内联代码块
+     * 转换回 markdown 围栏代码块格式，确保移动端 marked 能正确渲染。
      */
     _getNodeText(node) {
       if (!node) return ''
       const text = (node.data && node.data.text) || node.text || ''
-      // 如果是富文本 HTML，提取纯文本
       if (typeof text === 'string' && /<[^>]+>/.test(text)) {
-        const div = document.createElement('div')
-        div.innerHTML = text
-        return div.textContent || div.innerText || text
+        return this._htmlToDisplayText(text)
       }
       return String(text)
+    },
+
+    /**
+     * 将 HTML 富文本转为适合移动端显示的文本
+     *
+     * 桌面端 formatRichTextForMindMap 会把 <pre><code> 替换为：
+     *   <div style="border-radius;overflow:hidden">
+     *     <div style="font-weight:bold">💻 LANG</div>
+     *     <span style="font-family:monospace;white-space:pre-wrap">code</span>
+     *   </div>
+     * 这里将其还原为 markdown 围栏代码块，确保 marked 正常渲染。
+     */
+    _htmlToDisplayText(html) {
+      const div = document.createElement('div')
+      div.innerHTML = html
+
+      // 检测桌面端代码块：<span> 同时具有 monospace 和 pre-wrap 样式
+      const codeSpans = div.querySelectorAll('span')
+      codeSpans.forEach(span => {
+        const style = span.getAttribute('style') || ''
+        if (/monospace/.test(style) && /pre-wrap/.test(style)) {
+          // 向上查找包含 header 和 code 的容器
+          const container = span.closest('div')
+          if (!container) return
+          // 提取语言标签（如 "💻 CPP" → "cpp"、"🟨 C++" → "cpp"）
+          const header = container.querySelector(':scope > div')
+          let lang = ''
+          if (header) {
+            const headerText = (header.textContent || '').trim()
+            // 去掉 emoji 前缀，取第一个词作为语言标识
+            const plain = headerText.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F600}-\u{1F64F}]/gu, '').trim()
+            lang = plain.split(/\s+/)[0].replace(/[+#]/g, 'p').toLowerCase()
+          }
+          // 构建 markdown 围栏代码块
+          const codeText = span.textContent || ''
+          const mdCodeBlock = '\n```' + lang + '\n' + codeText.trimEnd() + '\n```\n'
+          // 用 markdown 代码块替换整个容器
+          container.replaceWith(mdCodeBlock)
+        }
+      })
+
+      return div.textContent || div.innerText || html
     },
 
     // ==================== 节点导航 ====================

@@ -240,8 +240,6 @@ export default {
   height: 100%;
   background: #fff;
   touch-action: pan-y; // 允许垂直滚动，水平手势用于导航
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 // 导航指示器
