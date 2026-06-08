@@ -36,15 +36,38 @@
         />
       </transition>
 
-      <!-- 段指示圆点（在 transition 外，始终可见） -->
-      <div class="segment-dots" v-if="segments.length > 1">
-        <span
-          v-for="(s, i) in segments"
-          :key="i"
-          class="dot"
-          :class="{ active: i === currentSegment }"
-          @click.stop="handleJumpSegment(i)"
-        />
+      <!-- 右侧导航区：兄弟节点 + 段指示圆点 -->
+      <div class="side-nav">
+        <!-- 上一个同层节点 -->
+        <div
+          class="sibling-arrow up"
+          :class="{ disabled: !hasPrevSibling }"
+          @click.stop="hasPrevSibling && handlePrevSibling()"
+          v-if="hasPrevSibling || hasNextSibling"
+        >
+          ▲
+        </div>
+
+        <!-- 段指示圆点 -->
+        <div class="segment-dots" v-if="segments.length > 1">
+          <span
+            v-for="(s, i) in segments"
+            :key="i"
+            class="dot"
+            :class="{ active: i === currentSegment }"
+            @click.stop="handleJumpSegment(i)"
+          />
+        </div>
+
+        <!-- 下一个同层节点 -->
+        <div
+          class="sibling-arrow down"
+          :class="{ disabled: !hasNextSibling }"
+          @click.stop="hasNextSibling && handleNextSibling()"
+          v-if="hasPrevSibling || hasNextSibling"
+        >
+          ▼
+        </div>
       </div>
     </div>
 
@@ -159,6 +182,14 @@ export default {
     hasParent() {
       if (!this.treeNav || !this.currentNodeId) return false
       return !this.treeNav.isRoot(this.currentNodeId)
+    },
+    hasPrevSibling() {
+      if (!this.cardResolver || !this.currentNodeId) return false
+      return !!this.cardResolver.getPrevCard(this.currentNodeId)
+    },
+    hasNextSibling() {
+      if (!this.cardResolver || !this.currentNodeId) return false
+      return !!this.cardResolver.getNextCard(this.currentNodeId)
     }
   },
   created() {
@@ -641,8 +672,8 @@ export default {
   }
 }
 
-// 段指示竖排圆点（在 transition 外，始终可见）
-.segment-dots {
+// 右侧导航区：兄弟节点箭头 + 段指示圆点
+.side-nav {
   position: absolute;
   right: 8px;
   top: 50%;
@@ -650,9 +681,37 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   z-index: 10;
+}
+
+.sibling-arrow {
+  font-size: 10px;
+  color: #a0a0b8;
   padding: 6px 4px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+  user-select: none;
+
+  &:active {
+    color: #409eff;
+  }
+
+  &.disabled {
+    color: #e0e0e8;
+    cursor: default;
+    pointer-events: none;
+  }
+}
+
+// 段指示竖排圆点
+.segment-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px;
 
   .dot {
     width: 6px;

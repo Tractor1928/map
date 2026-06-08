@@ -6,29 +6,6 @@
     @touchmove="onTouchMove"
     @touchend="onTouchEnd"
   >
-    <!-- 顶部导航指示 -->
-    <div class="card-nav-indicators">
-      <!-- 父节点提示 -->
-      <div class="nav-hint left" v-if="hasParent" @click.stop="$emit('back-parent')">
-        <span class="hint-arrow">←</span>
-        <span class="hint-label">返回上级</span>
-        <kbd>←</kbd>
-      </div>
-      <div class="nav-hint left disabled" v-else>
-        <span class="hint-arrow" style="opacity:0.2">←</span>
-      </div>
-
-      <!-- 子节点提示 -->
-      <div class="nav-hint right" v-if="hasChildren" @click.stop="$emit('enter-child')">
-        <kbd>→</kbd>
-        <span class="hint-label">进入子节点</span>
-        <span class="hint-arrow">→</span>
-      </div>
-      <div class="nav-hint right disabled" v-else>
-        <span class="hint-arrow" style="opacity:0.2">→</span>
-      </div>
-    </div>
-
     <!-- 段落内容 -->
     <div class="card-body">
       <NodeCardContent
@@ -185,66 +162,6 @@ export default {
   touch-action: pan-y; // 允许垂直滚动，水平手势用于导航
 }
 
-// 导航指示器
-.card-nav-indicators {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 16px;
-  flex-shrink: 0;
-}
-
-.nav-hint {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  color: #409eff;
-  cursor: pointer;
-  transition: background 0.15s;
-
-  &:active {
-    background: #e8f4ff;
-  }
-
-  &.disabled {
-    cursor: default;
-    color: #c0c0d0;
-
-    &:active {
-      background: transparent;
-    }
-  }
-
-  .hint-arrow {
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  .hint-label {
-    font-weight: 500;
-  }
-
-  kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 18px;
-    padding: 0 4px;
-    border: 1px solid #d0d0d8;
-    border-radius: 4px;
-    background: #f5f5fa;
-    font-size: 10px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #7a7a90;
-    box-shadow: 0 1px 0 #d0d0d8;
-  }
-
-}
-
-// 节点名称（截断显示）
 // 段落内容区
 .card-body {
   flex: 1;
