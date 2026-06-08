@@ -3,8 +3,6 @@
     <!-- 顶部导航栏 -->
     <MobileNavBar
       :breadcrumb="breadcrumb"
-      :segment-index="currentSegment"
-      :segment-total="segments.length"
       @navigate-to="navigateToNode"
       @show-outline="showOutline = true"
       @show-search="showSearch = true"
@@ -12,19 +10,22 @@
 
     <!-- 卡片区域 -->
     <div class="card-area" ref="cardArea">
+      <!-- 节点标题（在 transition 外，切段时不显隐） -->
+      <div class="card-node-name" v-if="currentNodeTitle" :class="{ 'qa-title': !!qaTitle }">
+        <span v-if="qaTitle" class="qa-icon">💬</span>
+        {{ currentNodeTitle }}
+      </div>
+
       <transition :name="transitionName" mode="out-in">
         <NodeCard
           :key="`${currentNodeId}-${currentSegment}`"
           :node-data="currentNode"
           :segments="segments"
           :current-segment="currentSegment"
-          :node-title="currentNodeTitle"
-          :is-q-a="!!qaTitle"
           :has-next-segment="currentSegment < segments.length - 1"
           :has-prev-segment="currentSegment > 0"
           :has-children="hasChildren"
           :has-parent="hasParent"
-          :sibling-preview="siblingPreview"
           @next-segment="handleNextSegment"
           @prev-segment="handlePrevSegment"
           @next-sibling="handleNextSibling"
@@ -34,6 +35,17 @@
           @text-selected="onTextSelected"
         />
       </transition>
+
+      <!-- 段指示圆点（在 transition 外，始终可见） -->
+      <div class="segment-dots" v-if="segments.length > 1">
+        <span
+          v-for="(s, i) in segments"
+          :key="i"
+          class="dot"
+          :class="{ active: i === currentSegment }"
+          @click.stop="handleJumpSegment(i)"
+        />
+      </div>
     </div>
 
     <!-- 底部聊天栏 -->
@@ -114,9 +126,6 @@ export default {
 
       // 父节点段位置记忆
       parentSegmentMap: {},
-
-      // 兄弟节点预览
-      siblingPreview: null,
 
       // UI 状态
       showOutline: false,
@@ -219,9 +228,6 @@ export default {
       // 计算面包屑
       this.breadcrumb = this.cardResolver.getBreadcrumb(card.nodeId)
 
-      // 计算兄弟节点预览
-      this.siblingPreview = this.cardResolver.getCardSiblings(card.nodeId)
-
       // 设置动画
       this.transitionName = anim || 'slide-up'
 
@@ -255,6 +261,13 @@ export default {
       } else {
         // 第一段 → 上一个兄弟节点
         this.handlePrevSibling()
+      }
+    },
+
+    handleJumpSegment(index) {
+      if (index >= 0 && index < this.segments.length && index !== this.currentSegment) {
+        this.transitionName = index > this.currentSegment ? 'slide-up' : 'slide-down'
+        this.currentSegment = index
       }
     },
 
@@ -339,8 +352,7 @@ export default {
     // ==================== AI 事件处理 ====================
 
     onNodeCreated(/* nodeId */) {
-      // 新节点已创建，刷新当前卡的兄弟预览
-      this.siblingPreview = this.cardResolver.getCardSiblings(this.currentNodeId)
+      // 新节点已创建
     },
 
     onAnswerUpdating({ nodeId, text }) {
@@ -361,7 +373,7 @@ export default {
         this.currentSegment = 0
       }
       this.$nextTick(() => {
-        this.siblingPreview = this.cardResolver.getCardSiblings(this.currentNodeId)
+        // 回答完成
       })
     },
 
@@ -502,7 +514,6 @@ export default {
             this.qaTitle = card.title
             this.answerNodeId = card.answerNodeId
             this.breadcrumb = this.cardResolver.getBreadcrumb(card.nodeId)
-            this.siblingPreview = this.cardResolver.getCardSiblings(card.nodeId)
           }
         }
       }
@@ -585,6 +596,75 @@ export default {
 .slide-right-leave-to {
   opacity: 0;
   transform: translateX(40px);
+}
+
+// 节点标题（在 transition 外，切段时不显隐）
+.card-node-name {
+  padding: 0 20px 8px;
+  font-size: 13px;
+  color: #7a7a90;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+
+  // QA 合并模式：标题更醒目
+  &.qa-title {
+    padding: 12px 20px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    white-space: normal;
+    line-height: 1.5;
+    border-bottom: 1px solid #f0f0f6;
+    background: linear-gradient(135deg, #f0f7ff 0%, #fafaff 100%);
+    border-radius: 12px 12px 0 0;
+    margin: -8px 0 0 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    .qa-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+}
+
+// 段指示竖排圆点（在 transition 外，始终可见）
+.segment-dots {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+  padding: 6px 4px;
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d0d0d8;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:active {
+      background: #7eb8f0;
+    }
+
+    &.active {
+      background: #409eff;
+      transform: scale(1.7);
+      box-shadow: 0 0 4px rgba(64, 158, 255, 0.4);
+    }
+  }
 }
 
 // 全局移动端样式重置

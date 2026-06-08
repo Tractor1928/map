@@ -25,31 +25,8 @@
       </div>
     </div>
 
-    <!-- 右侧：段进度 + 菜单 -->
+    <!-- 右侧：菜单 -->
     <div class="nav-right">
-      <!-- 段进度指示器 -->
-      <div class="segment-progress" v-if="segmentTotal > 1">
-        <svg class="progress-ring" width="32" height="32" viewBox="0 0 32 32">
-          <circle
-            cx="16" cy="16" r="13"
-            fill="none"
-            stroke="#e8e8ef"
-            stroke-width="3"
-          />
-          <circle
-            cx="16" cy="16" r="13"
-            fill="none"
-            stroke="#409eff"
-            stroke-width="3"
-            :stroke-dasharray="circumference"
-            :stroke-dashoffset="progressOffset"
-            stroke-linecap="round"
-            transform="rotate(-90 16 16)"
-          />
-        </svg>
-        <span class="progress-text">{{ segmentIndex + 1 }}/{{ segmentTotal }}</span>
-      </div>
-
       <!-- 菜单按钮 -->
       <div class="menu-btn" @click="showMenu = !showMenu">
         <span class="menu-dot"></span>
@@ -85,27 +62,11 @@ export default {
     breadcrumb: {
       type: Array,
       default: () => []
-    },
-    segmentIndex: {
-      type: Number,
-      default: 0
-    },
-    segmentTotal: {
-      type: Number,
-      default: 1
     }
   },
   data() {
     return {
-      showMenu: false,
-      circumference: 2 * Math.PI * 13 // ~81.68
-    }
-  },
-  computed: {
-    progressOffset() {
-      if (this.segmentTotal <= 1) return this.circumference
-      const progress = this.segmentIndex / this.segmentTotal
-      return this.circumference * (1 - progress)
+      showMenu: false
     }
   },
   methods: {
@@ -230,22 +191,6 @@ export default {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-}
-
-.segment-progress {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  .progress-ring {
-    flex-shrink: 0;
-  }
-
-  .progress-text {
-    font-size: 11px;
-    color: #9090a0;
-    font-weight: 500;
-  }
 }
 
 .menu-btn {
