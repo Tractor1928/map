@@ -1,6 +1,14 @@
 node_modules
 .DS_Store
+dist/
 dist_electron
 simple-mind-map/dist
 simple-mind-map/types
 utools/dist
+
+# IDE / 工作区
+.vscode/
+*.code-workspace
+.idea/
+*.sublime-workspace
+*.sublime-project
