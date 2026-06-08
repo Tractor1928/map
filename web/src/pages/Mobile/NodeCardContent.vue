@@ -203,9 +203,9 @@ export default {
 .node-card-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
+  min-height: 100%;
   padding: 24px 20px;
+  box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
 }
 
