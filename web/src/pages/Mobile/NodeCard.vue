@@ -149,14 +149,14 @@ export default {
           }
         }
       } else {
-        // 水平滑动
-        if (dx > threshold) {
-          // 右滑 → 进入子节点
+        // 水平滑动：左滑前进（进入子节点），右滑后退（返回父节点）
+        if (dx < -threshold) {
+          // 左滑 → 进入子节点
           if (this.hasChildren) {
             this.$emit('enter-child')
           }
-        } else if (dx < -threshold) {
-          // 左滑 → 返回父节点
+        } else if (dx > threshold) {
+          // 右滑 → 返回父节点
           if (this.hasParent) {
             this.$emit('back-parent')
           }
