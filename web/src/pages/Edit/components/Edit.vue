@@ -242,6 +242,7 @@ export default {
     this.$bus.$on('paddingChange', this.onPaddingChange)
     this.$bus.$on('export', this.export)
     this.$bus.$on('setData', this.setData)
+    this.$bus.$on('reloadData', this.reloadData)
     this.$bus.$on('startTextEdit', this.handleStartTextEdit)
     this.$bus.$on('endTextEdit', this.handleEndTextEdit)
     this.$bus.$on('createAssociativeLine', this.handleCreateLineFromActiveNode)
@@ -258,6 +259,7 @@ export default {
     this.$bus.$off('paddingChange', this.onPaddingChange)
     this.$bus.$off('export', this.export)
     this.$bus.$off('setData', this.setData)
+    this.$bus.$off('reloadData', this.reloadData)
     this.$bus.$off('startTextEdit', this.handleStartTextEdit)
     this.$bus.$off('endTextEdit', this.handleEndTextEdit)
     this.$bus.$off('createAssociativeLine', this.handleCreateLineFromActiveNode)
@@ -530,6 +532,24 @@ export default {
       const fileURL = this.$route.query.fileURL
       if (!fileURL) return false
       return /\.(smm|json|xmind|md|xlsx)$/.test(fileURL)
+    },
+
+    // 从 localStorage 重新加载数据（用于移动端切回时同步）
+    reloadData() {
+      const freshData = getData()
+      if (freshData && freshData.root) {
+        // 保存当前视图状态
+        const currentView = this.mindMap.view.getViewData()
+        // 设置新数据
+        this.mindMap.setFullData({
+          root: freshData.root,
+          layout: freshData.layout || this.mindMapData.layout,
+          theme: freshData.theme || this.mindMapData.theme,
+          view: currentView // 保留当前视图状态
+        })
+        this.mindMapData = freshData
+        this.mindMap.view.reset()
+      }
     },
 
     // 动态设置思维导图数据

@@ -46,8 +46,20 @@
           <span class="icon iconfont iconexport"></span>
           <span class="text">{{ $t('toolbar.export') }}</span>
         </div>
-        
+
         <ToolbarNodeBtnList :list="horizontalList"></ToolbarNodeBtnList>
+
+        <!-- 手机视图入口 -->
+        <el-tooltip
+          effect="dark"
+          content="切换到手机卡片浏览模式"
+          placement="bottom"
+        >
+          <div class="toolbarBtn mobileEntry" @click="$router.push('/mobile')">
+            <span class="icon">📱</span>
+            <span class="text">手机视图</span>
+          </div>
+        </el-tooltip>
         <!-- 更多 -->
         <el-popover
           v-model="popoverShow"

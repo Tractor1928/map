@@ -48,6 +48,16 @@ export default {
     loading.close()
     this.setBodyDark()
   },
+  // keep-alive 激活时从 localStorage 重新加载数据
+  // 以同步移动端可能已经修改的导图数据
+  activated() {
+    if (this.show) {
+      // 通知 Edit 组件刷新数据
+      this.$nextTick(() => {
+        this.$bus.$emit('reloadData')
+      })
+    }
+  },
   methods: {
     ...mapMutations(['setLocalConfig']),
 

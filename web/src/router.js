@@ -7,11 +7,18 @@ const routes = [
   {
     path: '/',
     name: 'Edit',
-    component: () => import(`./pages/Edit/Index.vue`)
+    component: () => import(`./pages/Edit/Index.vue`),
+    meta: { keepAlive: true }
   },
   {
     path: '/index',
     redirect: '/'
+  },
+  {
+    path: '/mobile',
+    name: 'Mobile',
+    component: () => import(`./pages/Mobile/Index.vue`),
+    meta: { keepAlive: true }
   },
   {
     path: '/doc/zh',
