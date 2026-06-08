@@ -39,11 +39,11 @@ export default {
   computed: {
     toolbarStyle() {
       if (!this.visible || !this.selectionRect) return { display: 'none' }
-      // 定位在选中文字上方居中
-      const top = this.selectionRect.top - 50
+      // 定位在选中文字下方（避开上方原生菜单）
+      const top = this.selectionRect.bottom + 8
       const left = this.selectionRect.left + this.selectionRect.width / 2
       return {
-        top: Math.max(20, top) + 'px',
+        top: Math.min(window.innerHeight - 50, top) + 'px',
         left: left + 'px'
       }
     }

@@ -395,6 +395,9 @@ export default {
         this.selectedText = text
         this.selectionRect = rect
         this.showSelectionToolbar = true
+        // 移动端选中后会立即触发 click，标记防误关
+        this._toolbarJustShown = true
+        setTimeout(() => { this._toolbarJustShown = false }, 500)
       } else {
         // 延迟隐藏，防止 click 事件在 toolbar 事件之前触发
         setTimeout(() => {
@@ -412,6 +415,8 @@ export default {
     },
 
     onDocumentClick(e) {
+      // 工具栏刚出现时，忽略紧接着的 click（移动端选中后的 tap）
+      if (this._toolbarJustShown) return
       // 如果点击的不是工具栏内的元素，隐藏工具栏
       if (this.showSelectionToolbar) {
         const toolbar = this.$refs.selectionToolbar
@@ -671,5 +676,12 @@ export default {
 // 全局移动端样式重置
 .mobile-page * {
   -webkit-tap-highlight-color: transparent;
+}
+</style>
+
+<!-- 全局：禁止原生下拉刷新 -->
+<style>
+html, body {
+  overscroll-behavior: none;
 }
 </style>

@@ -6,7 +6,7 @@
     </div>
 
     <!-- 段落正文 -->
-    <div class="segment-body" ref="segmentBody" @mouseup="onTextSelect" @touchend="onTextSelect">
+    <div class="segment-body" ref="segmentBody" @mouseup="onTextSelect">
       <!-- Markdown 渲染内容 -->
       <div
         class="markdown-content customScrollbar"
@@ -43,7 +43,8 @@ export default {
   emits: ['text-selected'],
   data() {
     return {
-      renderedHtml: ''
+      renderedHtml: '',
+      _selectionTimer: null
     }
   },
   watch: {
@@ -54,38 +55,58 @@ export default {
       }
     }
   },
+  mounted() {
+    // 移动端文字选择触发 touchend 不可靠，用 selectionchange 兜底
+    document.addEventListener('selectionchange', this.onSelectionChange)
+  },
+  beforeDestroy() {
+    document.removeEventListener('selectionchange', this.onSelectionChange)
+    clearTimeout(this._selectionTimer)
+  },
   methods: {
+    onSelectionChange() {
+      // 防止 selectionchange 高频触发时频繁检查
+      clearTimeout(this._selectionTimer)
+      this._selectionTimer = setTimeout(() => {
+        this.checkSelection()
+      }, 350)
+    },
+
     onTextSelect(/* e */) {
-      // 延迟执行，确保选择已完成
+      // 桌面端 mouseup → 立即检查（比 selectionchange 响应更快）
       setTimeout(() => {
-        const selection = window.getSelection()
-        if (!selection || selection.rangeCount === 0) {
-          this.$emit('text-selected', { text: '', rect: null })
-          return
-        }
-        const selectedText = selection.toString().trim()
-        if (!selectedText || selectedText.length < 2) {
-          this.$emit('text-selected', { text: '', rect: null })
-          return
-        }
-        // 检查选中文字是否在当前组件内
-        const range = selection.getRangeAt(0)
-        const el = this.$refs.segmentBody
-        if (!el || !el.contains(range.commonAncestorContainer)) {
-          return
-        }
-        const rect = range.getBoundingClientRect()
-        this.$emit('text-selected', {
-          text: selectedText,
-          rect: {
-            left: rect.left,
-            top: rect.top,
-            right: rect.right,
-            bottom: rect.bottom,
-            width: rect.width
-          }
-        })
+        this.checkSelection()
       }, 50)
+    },
+
+    checkSelection() {
+      const selection = window.getSelection()
+      if (!selection || selection.rangeCount === 0) {
+        this.$emit('text-selected', { text: '', rect: null })
+        return
+      }
+      const selectedText = selection.toString().trim()
+      if (!selectedText || selectedText.length < 2) {
+        this.$emit('text-selected', { text: '', rect: null })
+        return
+      }
+      // 检查选中文字是否在当前组件内
+      const range = selection.getRangeAt(0)
+      const el = this.$refs.segmentBody
+      if (!el || !el.contains(range.commonAncestorContainer)) {
+        return
+      }
+      const rect = range.getBoundingClientRect()
+      this.$emit('text-selected', {
+        text: selectedText,
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          width: rect.width
+        }
+      })
     },
 
     renderContent() {

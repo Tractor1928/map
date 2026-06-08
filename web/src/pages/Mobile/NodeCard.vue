@@ -241,6 +241,7 @@ export default {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   min-height: 0;
 }
 
