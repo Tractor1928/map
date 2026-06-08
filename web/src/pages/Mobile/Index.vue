@@ -31,6 +31,7 @@
           @prev-sibling="handlePrevSibling"
           @enter-child="handleEnterChild"
           @back-parent="handleBackParent"
+          @text-selected="onTextSelected"
         />
       </transition>
     </div>
@@ -49,6 +50,16 @@
 
     <!-- 思考过程抽屉 -->
     <ThinkingDrawer ref="thinkingDrawer" />
+
+    <!-- 文字选中悬浮提问工具栏 -->
+    <SelectionToolbar
+      :visible="showSelectionToolbar"
+      :selected-text="selectedText"
+      :selection-rect="selectionRect"
+      @ask="onAskSelectionWithSuffix('?')"
+      @ask-howto="onAskSelectionWithSuffix('是怎么实现的？')"
+      ref="selectionToolbar"
+    />
   </div>
 </template>
 
@@ -57,9 +68,12 @@ import MobileNavBar from './MobileNavBar.vue'
 import NodeCard from './NodeCard.vue'
 import BottomChatBar from './BottomChatBar.vue'
 import ThinkingDrawer from './ThinkingDrawer.vue'
+import SelectionToolbar from './SelectionToolbar.vue'
 import { createTreeNavigator } from './useTreeNavigator'
 import { createCardResolver } from './useCardResolver'
 import { splitContent } from '@/utils/segmentSplitter'
+import { aiServiceFactory } from '@/services/ai'
+import { getCurrentPromptConfig } from '@/config/aiPrompts'
 
 export default {
   name: 'MobileIndex',
@@ -67,7 +81,8 @@ export default {
     MobileNavBar,
     NodeCard,
     BottomChatBar,
-    ThinkingDrawer
+    ThinkingDrawer,
+    SelectionToolbar
   },
   data() {
     return {
@@ -106,7 +121,12 @@ export default {
       // UI 状态
       showOutline: false,
       showSearch: false,
-      loading: true
+      loading: true,
+
+      // 文字选中悬浮工具栏
+      showSelectionToolbar: false,
+      selectedText: '',
+      selectionRect: null
     }
   },
   computed: {
@@ -139,10 +159,13 @@ export default {
     document.addEventListener('visibilitychange', this.handleVisibilityChange)
     // 键盘方向键导航（桌面端使用移动模式时）
     document.addEventListener('keydown', this.handleKeydown)
+    // 点击其他地方隐藏选中工具栏
+    document.addEventListener('click', this.onDocumentClick, true)
   },
   beforeDestroy() {
     document.removeEventListener('visibilitychange', this.handleVisibilityChange)
     document.removeEventListener('keydown', this.handleKeydown)
+    document.removeEventListener('click', this.onDocumentClick, true)
   },
   methods: {
     /**
@@ -349,8 +372,120 @@ export default {
     },
 
     onAIError(message) {
-      // 可以用 toast 提示
       console.error('[Mobile] AI 错误:', message)
+    },
+
+    // ==================== 文字选中悬浮工具栏 ====================
+
+    onTextSelected({ text, rect }) {
+      if (text && rect) {
+        this.selectedText = text
+        this.selectionRect = rect
+        this.showSelectionToolbar = true
+      } else {
+        // 延迟隐藏，防止 click 事件在 toolbar 事件之前触发
+        setTimeout(() => {
+          if (this.showSelectionToolbar) {
+            this.hideSelectionToolbar()
+          }
+        }, 200)
+      }
+    },
+
+    hideSelectionToolbar() {
+      this.showSelectionToolbar = false
+      this.selectedText = ''
+      this.selectionRect = null
+    },
+
+    onDocumentClick(e) {
+      // 如果点击的不是工具栏内的元素，隐藏工具栏
+      if (this.showSelectionToolbar) {
+        const toolbar = this.$refs.selectionToolbar
+        if (toolbar && toolbar.$el && !toolbar.$el.contains(e.target)) {
+          this.hideSelectionToolbar()
+        }
+      }
+    },
+
+    async onAskSelectionWithSuffix(suffix) {
+      const selectedText = this.selectedText
+      this.hideSelectionToolbar()
+      if (!this.treeNav || !this.currentNodeId || !selectedText) return
+
+      // 对齐桌面端：拼接后缀（? 或 是怎么实现的？）
+      const questionText = selectedText + suffix
+      const nav = this.treeNav
+
+      // QA 模式下选中的是回答内容 → 问题创建在回答节点下
+      // 普通模式下 → 问题创建在当前节点下
+      const parentId = (this.qaTitle && this.answerNodeId) ? this.answerNodeId : this.currentNodeId
+
+      try {
+        // 1. 创建问题子节点
+        const questionNodeId = nav.createChildNode(parentId, questionText)
+        if (!questionNodeId) throw new Error('创建问题节点失败')
+
+        this.onNodeCreated(questionNodeId)
+
+        // 2. 创建 AI 回答子节点
+        const answerNodeId = nav.createChildNode(questionNodeId, '🤖 正在思考中...', {
+          isAIResponse: true,
+          aiStatus: 'loading'
+        })
+        if (!answerNodeId) throw new Error('创建回答节点失败')
+
+        this.onNodeCreated(answerNodeId)
+
+        // 3. 调用 AI 服务
+        const aiService = aiServiceFactory.getService()
+        const promptConfig = getCurrentPromptConfig()
+        const systemPrompt = promptConfig.getSystemPrompt(false)
+
+        // 构建上下文
+        const path = nav.getNodePath(parentId)
+        let contextPrompt = ''
+        if (path.length > 0) {
+          const chainTexts = path.map((item, i) => `${i + 1}. ${item.text}`).join('\n')
+          contextPrompt = `**导图层级上下文**\n请严格参考下面的节点链路：\n${chainTexts}\n\n要求：回答必须承接链路中的上级语义，避免偏离当前节点主题。`
+        }
+
+        const messages = []
+        if (systemPrompt) messages.push({ role: 'system', content: systemPrompt })
+        if (contextPrompt) messages.push({ role: 'system', content: contextPrompt })
+        messages.push({ role: 'user', content: questionText })
+
+        // 流式回调
+        let accumulatedText = ''
+        const onStream = (content) => {
+          accumulatedText += content
+          nav.updateNodeText(answerNodeId, accumulatedText)
+          // 如果当前在 QA 卡且这是对应的回答节点，实时更新
+          if (answerNodeId === this.answerNodeId) {
+            this.segments = splitContent(accumulatedText)
+            if (this.currentSegment >= this.segments.length) {
+              this.currentSegment = Math.max(0, this.segments.length - 1)
+            }
+          }
+        }
+
+        const onReasoning = (reasoning) => {
+          if (this.$refs.thinkingDrawer) {
+            this.$refs.thinkingDrawer.show(reasoning)
+          }
+        }
+
+        const fullResponse = await aiService.generateResponse(messages, onStream, onReasoning)
+        const finalContent = fullResponse || accumulatedText || '回答生成完成'
+        nav.updateNodeText(answerNodeId, finalContent)
+        nav.updateNodeData(answerNodeId, { aiStatus: 'complete' })
+
+        this.onAnswerComplete({ nodeId: answerNodeId, text: finalContent })
+
+      } catch (err) {
+        console.error('[Mobile] 选中文字提问失败:', err)
+        this.onAIError(err.message || '生成回答失败')
+      }
     },
 
     // ==================== 工具方法 ====================

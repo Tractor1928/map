@@ -47,6 +47,7 @@
       <NodeCardContent
         :segment="currentSegmentData"
         :total-segments="segments.length"
+        @text-selected="$emit('text-selected', $event)"
       />
     </div>
 
@@ -140,7 +141,7 @@ export default {
     'next-segment', 'prev-segment',
     'next-sibling', 'prev-sibling',
     'enter-child', 'back-parent',
-    'swipe'
+    'swipe', 'text-selected'
   ],
   computed: {
     currentSegmentData() {

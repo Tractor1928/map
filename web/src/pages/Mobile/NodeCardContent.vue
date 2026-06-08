@@ -6,7 +6,7 @@
     </div>
 
     <!-- 段落正文 -->
-    <div class="segment-body" ref="segmentBody">
+    <div class="segment-body" ref="segmentBody" @mouseup="onTextSelect" @touchend="onTextSelect">
       <!-- Markdown 渲染内容 -->
       <div
         class="markdown-content customScrollbar"
@@ -39,6 +39,7 @@ export default {
       default: 1
     }
   },
+  emits: ['text-selected'],
   data() {
     return {
       renderedHtml: ''
@@ -53,6 +54,39 @@ export default {
     }
   },
   methods: {
+    onTextSelect(/* e */) {
+      // 延迟执行，确保选择已完成
+      setTimeout(() => {
+        const selection = window.getSelection()
+        if (!selection || selection.rangeCount === 0) {
+          this.$emit('text-selected', { text: '', rect: null })
+          return
+        }
+        const selectedText = selection.toString().trim()
+        if (!selectedText || selectedText.length < 2) {
+          this.$emit('text-selected', { text: '', rect: null })
+          return
+        }
+        // 检查选中文字是否在当前组件内
+        const range = selection.getRangeAt(0)
+        const el = this.$refs.segmentBody
+        if (!el || !el.contains(range.commonAncestorContainer)) {
+          return
+        }
+        const rect = range.getBoundingClientRect()
+        this.$emit('text-selected', {
+          text: selectedText,
+          rect: {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width
+          }
+        })
+      }, 50)
+    },
+
     renderContent() {
       const text = this.segment.content || ''
       if (!text) {
