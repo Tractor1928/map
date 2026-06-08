@@ -91,7 +91,36 @@ export default {
       touchStartTime: 0
     }
   },
+  mounted() {
+    this._dumpLayout('mounted')
+  },
+  updated() {
+    this._dumpLayout('updated')
+  },
   methods: {
+    _dumpLayout(tag) {
+      this.$nextTick(() => {
+        const mobilePage = document.querySelector('.mobile-page')
+        const cardArea = this.$el && this.$el.closest('.card-area')
+        const chatBar = document.querySelector('.bottom-chat-bar')
+        const cardBody = this.$el && this.$el.querySelector('.card-body')
+        if (!mobilePage || !cardArea || !chatBar || !cardBody) return
+
+        const mp = mobilePage.getBoundingClientRect()
+        const ca = cardArea.getBoundingClientRect()
+        const cb = chatBar.getBoundingClientRect()
+        const body = cardBody.getBoundingClientRect()
+
+        console.log('[NodeCard:layout:' + tag + ']', {
+          'mobilePage.h': Math.round(mp.height),
+          'cardArea.top': Math.round(ca.top), 'cardArea.bottom': Math.round(ca.bottom), 'cardArea.h': Math.round(ca.height),
+          'chatBar.top': Math.round(cb.top), 'chatBar.bottom': Math.round(cb.bottom), 'chatBar.h': Math.round(cb.height),
+          'cardBody.top': Math.round(body.top), 'cardBody.bottom': Math.round(body.bottom), 'cardBody.h': Math.round(body.height),
+          'cardBody.scrollH': cardBody.scrollHeight, 'cardBody.clientH': cardBody.clientHeight,
+          overlap: Math.round(body.bottom - cb.top)
+        })
+      })
+    },
     onTouchStart(e) {
       const touch = e.touches[0]
       this.touchStartX = touch.clientX
