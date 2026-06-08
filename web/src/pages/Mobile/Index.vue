@@ -550,6 +550,8 @@ export default {
 
 .card-area {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   margin-top: calc(56px + env(safe-area-inset-top));
   position: relative;
@@ -605,6 +607,7 @@ export default {
 
 // 节点标题（在 transition 外，切段时不显隐）
 .card-node-name {
+  flex-shrink: 0;
   padding: 0 20px 8px;
   font-size: 13px;
   color: #7a7a90;

@@ -208,7 +208,8 @@ export default {
 .node-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   background: #fff;
   touch-action: pan-y; // 允许垂直滚动，水平手势用于导航
 }
