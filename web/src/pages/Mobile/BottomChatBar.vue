@@ -234,11 +234,7 @@ ${chainTexts}${parentAnswerHint}
 
 <style lang="less" scoped>
 .bottom-chat-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  flex-shrink: 0;
   padding: 4px 12px 10px;
   // iPhone 安全区域
   padding-bottom: calc(10px + env(safe-area-inset-bottom));
