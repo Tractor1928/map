@@ -681,14 +681,14 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   z-index: 10;
 }
 
 .sibling-arrow {
-  font-size: 10px;
+  font-size: 13px;
   color: #a0a0b8;
-  padding: 6px 4px;
+  padding: 8px 6px;
   cursor: pointer;
   line-height: 1;
   transition: color 0.15s;
@@ -710,12 +710,12 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 4px;
 
   .dot {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #d0d0d8;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
