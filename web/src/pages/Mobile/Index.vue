@@ -51,6 +51,7 @@
     <!-- 底部聊天栏 -->
     <BottomChatBar
       :current-node-id="currentNodeId"
+      :answer-node-id="answerNodeId"
       :node-text="currentNodeTitle"
       :tree-nav="treeNav"
       @node-created="onNodeCreated"

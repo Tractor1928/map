@@ -51,6 +51,11 @@ export default {
       type: String,
       default: ''
     },
+    /** QA 合并模式下的回答节点 ID（存在时，新问题应挂在回答节点下） */
+    answerNodeId: {
+      type: String,
+      default: ''
+    },
     /** 当前节点文本（简短显示） */
     nodeText: {
       type: String,
@@ -115,7 +120,8 @@ export default {
 
     async generateAIAnswer(questionText) {
       const nav = this.treeNav
-      const parentId = this.currentNodeId
+      // QA 模式下挂在回答节点下（形成 Q→A→Q→A 链），普通模式挂当前节点下
+      const parentId = this.answerNodeId || this.currentNodeId
 
       // 1. 创建问题子节点
       const questionNodeId = nav.createChildNode(parentId, questionText)
