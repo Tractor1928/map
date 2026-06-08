@@ -22,7 +22,8 @@
 </template>
 
 <script>
-const marked = require('marked')
+const marked = require('@/utils/markdown')
+require('highlight.js/styles/atom-one-dark.css')
 
 export default {
   name: 'NodeCardContent',
@@ -126,17 +127,14 @@ export default {
 
     markdownToHtml(markdown) {
       let html = ''
-      if (typeof marked === 'function') {
+      try {
         html = marked(markdown)
-      } else if (marked.marked && typeof marked.marked === 'function') {
-        html = marked.marked(markdown)
-      } else if (marked.parse && typeof marked.parse === 'function') {
-        html = marked.parse(markdown)
-      } else {
+      } catch (e) {
+        console.warn('[NodeCardContent] marked 渲染失败:', e)
         return ''
       }
 
-      // 添加移动端友好的样式类
+      // 添加移动端友好的样式增强（语言标识头、表格滚动等）
       html = this.enhanceMarkdownHtml(html)
       return html
     },
@@ -317,7 +315,12 @@ export default {
     background: transparent;
     padding: 0;
     border-radius: 0;
-    color: inherit;
+    color: #e0e0f0;
+  }
+
+  // 覆盖 highlight.js 主题自带的背景色，使用组件的 pre 背景
+  :deep(pre .hljs) {
+    background: transparent;
   }
 
   :deep(table) {

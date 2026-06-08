@@ -2,7 +2,7 @@ import { aiServiceFactory } from '@/services/ai'
 import { createUid } from 'simple-mind-map/src/utils'
 import { AI_PROMPTS, buildContextPrompt } from '@/config/aiPrompts'
 // 修复marked导入方式
-const marked = require('marked')
+const marked = require('@/utils/markdown')
 // 动态导入Mermaid库以避免构建问题
 let mermaid = null
 const verboseAIDebug =
@@ -480,25 +480,9 @@ export default {
      */
     convertMarkdownToRichText(markdown) {
       if (!markdown) return ''
-      
+
       try {
-        // 确保marked可用并正确调用
-        let html = ''
-        
-        // 根据marked版本使用不同的调用方式
-        if (typeof marked === 'function') {
-          // 直接调用marked函数
-          html = marked(markdown)
-        } else if (marked.marked && typeof marked.marked === 'function') {
-          // 使用marked.marked方法
-          html = marked.marked(markdown)
-        } else if (marked.parse && typeof marked.parse === 'function') {
-          // 使用marked.parse方法
-          html = marked.parse(markdown)
-        } else {
-          // 使用简单的降级方案
-          html = this.simpleMarkdownToHtml(markdown)
-        }
+        let html = marked(markdown)
 
         // 将HTML转换为适合思维导图富文本的格式
         html = this.formatRichTextForMindMap(html)
