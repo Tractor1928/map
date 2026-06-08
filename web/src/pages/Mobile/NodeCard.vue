@@ -242,6 +242,7 @@ export default {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  padding-bottom: 32px;
   min-height: 0;
 }
 

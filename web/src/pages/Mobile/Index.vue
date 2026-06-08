@@ -552,7 +552,7 @@ export default {
   flex: 1;
   overflow: hidden;
   margin-top: calc(56px + env(safe-area-inset-top));
-  margin-bottom: 80px;
+  margin-bottom: 88px;
   position: relative;
 }
 

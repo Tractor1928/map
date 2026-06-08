@@ -239,10 +239,10 @@ ${chainTexts}${parentAnswerHint}
   left: 0;
   right: 0;
   z-index: 100;
-  padding: 10px 12px;
+  padding: 4px 12px 10px;
   // iPhone 安全区域
   padding-bottom: calc(10px + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, #fff 60%, rgba(255, 255, 255, 0));
+  background: linear-gradient(to top, #fff 30%, transparent);
   transition: padding 0.2s ease;
 }
 
