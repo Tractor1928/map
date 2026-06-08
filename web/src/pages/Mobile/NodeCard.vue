@@ -12,13 +12,22 @@
       <div class="nav-hint left" v-if="hasParent" @click.stop="$emit('back-parent')">
         <span class="hint-arrow">←</span>
         <span class="hint-label">返回上级</span>
+        <kbd>←</kbd>
       </div>
       <div class="nav-hint left disabled" v-else>
         <span class="hint-arrow" style="opacity:0.2">←</span>
       </div>
 
+      <!-- 中间：段内导航 -->
+      <div class="nav-hint center" v-if="segments.length > 1">
+        <kbd>↑</kbd>
+        <span class="hint-label">上下翻段</span>
+        <kbd>↓</kbd>
+      </div>
+
       <!-- 子节点提示 -->
       <div class="nav-hint right" v-if="hasChildren" @click.stop="$emit('enter-child')">
+        <kbd>→</kbd>
         <span class="hint-label">进入子节点</span>
         <span class="hint-arrow">→</span>
       </div>
@@ -268,6 +277,32 @@ export default {
 
   .hint-label {
     font-weight: 500;
+  }
+
+  kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 4px;
+    border: 1px solid #d0d0d8;
+    border-radius: 4px;
+    background: #f5f5fa;
+    font-size: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #7a7a90;
+    box-shadow: 0 1px 0 #d0d0d8;
+  }
+
+  &.center {
+    cursor: default;
+    color: #7a7a90;
+    gap: 6px;
+
+    &:active {
+      background: transparent;
+    }
   }
 }
 

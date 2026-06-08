@@ -124,9 +124,12 @@ export default {
   mounted() {
     // 监听页面可见性，回来时刷新数据
     document.addEventListener('visibilitychange', this.handleVisibilityChange)
+    // 键盘方向键导航（桌面端使用移动模式时）
+    document.addEventListener('keydown', this.handleKeydown)
   },
   beforeDestroy() {
     document.removeEventListener('visibilitychange', this.handleVisibilityChange)
+    document.removeEventListener('keydown', this.handleKeydown)
   },
   methods: {
     /**
@@ -285,6 +288,42 @@ export default {
         this.navigateToNode(parent.id, savedSegment, 'slide-right')
       } else {
         this.vibrate()
+      }
+    },
+
+    // ==================== 键盘导航（桌面端使用移动模式时） ====================
+
+    /**
+     * 方向键映射（与自然滚动直觉一致）：
+     *   ↓ / ArrowDown  → 下一段 / 下一个兄弟节点（前进）
+     *   ↑ / ArrowUp    → 上一段 / 上一个兄弟节点（后退）
+     *   → / ArrowRight → 进入子节点
+     *   ← / ArrowLeft  → 返回父节点
+     */
+    handleKeydown(e) {
+      // 如果焦点在输入框内，不拦截
+      const tag = e.target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) {
+        return
+      }
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          this.handleNextSegment()
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          this.handlePrevSegment()
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          this.handleEnterChild()
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          this.handleBackParent()
+          break
       }
     },
 
