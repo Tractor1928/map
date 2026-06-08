@@ -204,7 +204,7 @@ export default {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  padding: 24px 20px;
+  padding: 24px 32px 24px 20px;
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
 }
