@@ -132,16 +132,24 @@ export default {
 
       // 判断方向
       if (absDy > absDx) {
-        // 垂直滑动
+        // 垂直滑动：只有内容滚到头才切段
+        const scrollEl = this.$el && this.$el.querySelector('.card-body')
+        const atTop = scrollEl ? scrollEl.scrollTop <= 5 : true
+        const atBottom = scrollEl
+          ? scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 5
+          : true
+
         if (dy < -threshold) {
-          // 上滑
+          // 上滑 → 内容滚到底后切下一段
+          if (!atBottom) return
           if (this.hasNextSegment) {
             this.$emit('next-segment')
           } else {
             this.$emit('next-sibling')
           }
         } else if (dy > threshold) {
-          // 下滑
+          // 下滑 → 内容滚到顶后切上一段
+          if (!atTop) return
           if (this.hasPrevSegment) {
             this.$emit('prev-segment')
           } else {
