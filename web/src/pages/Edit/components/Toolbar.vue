@@ -211,8 +211,7 @@ const defaultBtnList = [
   'formula',
   // 'attachment',
   'outerFrame',
-  'annotation',
-  'ai'
+  'annotation'
 ]
 
 export default {
@@ -250,8 +249,7 @@ export default {
     ...mapState({
       isDark: state => state.localConfig.isDark,
       isHandleLocalFile: state => state.isHandleLocalFile,
-      openNodeRichText: state => state.localConfig.openNodeRichText,
-      enableAi: state => state.localConfig.enableAi
+      openNodeRichText: state => state.localConfig.openNodeRichText
     }),
 
     btnLit() {
@@ -259,11 +257,6 @@ export default {
       if (!this.openNodeRichText) {
         res = res.filter(item => {
           return item !== 'formula'
-        })
-      }
-      if (!this.enableAi) {
-        res = res.filter(item => {
-          return item !== 'ai'
         })
       }
       return res

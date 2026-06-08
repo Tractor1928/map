@@ -178,17 +178,7 @@
         <span class="icon iconfont iconwaikuang"></span>
         <span class="text">{{ $t('toolbar.outerFrame') }}</span>
       </div>
-      <div
-        v-if="item === 'ai'"
-        class="toolbarBtn"
-        :class="{
-          disabled: hasGeneralization
-        }"
-        @click="aiCrate"
-      >
-        <span class="icon iconfont iconAIshengcheng"></span>
-        <span class="text">{{ $t('toolbar.ai') }}</span>
-      </div>
+      <!-- AI 按钮已移除 -->
     </template>
   </div>
 </template>
@@ -309,10 +299,7 @@ export default {
       this.$bus.$emit('execCommand', 'SET_NOTATION', this.activeNodes, ...args)
     },
 
-    // AI生成整体
-    aiCrate() {
-      this.$bus.$emit('ai_create_all')
-    }
+    // AI 生成方法已移除
   }
 }
 </script>

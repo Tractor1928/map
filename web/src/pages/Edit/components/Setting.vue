@@ -313,64 +313,7 @@
           </div>
         </div>
 
-        <!-- AI 提示词配置管理 -->
-        <div class="promptConfigSection">
-          <div class="sectionTitle">AI 提示词配置</div>
-          
-          <!-- 当前配置选择器 -->
-          <div class="row">
-            <div class="rowItem">
-              <span class="name">当前配置</span>
-              <el-select
-                size="mini"
-                style="width: 200px"
-                v-model="promptConfig.selectedId"
-                placeholder="选择提示词配置"
-                @change="handlePromptConfigChange"
-              >
-                <el-option-group label="预设配置">
-                  <el-option
-                    v-for="preset in presetPrompts"
-                    :key="preset.id"
-                    :label="preset.name"
-                    :value="preset.id"
-                  >
-                  </el-option>
-                </el-option-group>
-                <el-option-group label="自定义配置" v-if="customPrompts.length > 0">
-                  <el-option
-                    v-for="custom in customPrompts"
-                    :key="custom.id"
-                    :label="custom.name"
-                    :value="custom.id"
-                  >
-                  </el-option>
-                </el-option-group>
-              </el-select>
-            </div>
-          </div>
-
-          <!-- 配置管理按钮 -->
-          <div class="row">
-            <div class="rowItem btnGroup">
-              <el-button size="mini" @click="handleCreatePrompt">
-                新建
-              </el-button>
-              <el-button size="mini" @click="handleEditPrompt" :disabled="!canEditCurrentPrompt">
-                编辑
-              </el-button>
-              <el-button size="mini" @click="handleDeletePrompt" :disabled="!canDeleteCurrentPrompt">
-                删除
-              </el-button>
-              <el-button size="mini" @click="handleImportPrompt">
-                导入
-              </el-button>
-              <el-button size="mini" @click="handleExportPrompt">
-                导出
-              </el-button>
-            </div>
-          </div>
-        </div>
+        <!-- AI 提示词配置管理已移除 -->
       </div>
       <!-- 配置鼠标滚轮行为 -->
       <div class="row">
@@ -485,12 +428,7 @@
       </div>
     </div>
 
-    <!-- 提示词配置编辑对话框 -->
-    <PromptConfigDialog
-      :visible.sync="promptDialogVisible"
-      :config="editingPromptConfig"
-      @saved="handlePromptConfigSaved"
-    />
+    <!-- 提示词配置已移除 -->
   </Sidebar>
 </template>
 
@@ -499,24 +437,13 @@ import Sidebar from './Sidebar.vue'
 import { storeConfig } from '@/api'
 import { mapState, mapMutations } from 'vuex'
 import Color from './Color.vue'
-import PromptConfigDialog from './PromptConfigDialog.vue'
-import { PRESET_PROMPTS } from '@/config/aiPrompts'
-import {
-  getSelectedPromptId,
-  setSelectedPromptId,
-  getCustomPrompts,
-  getPromptById,
-  deleteCustomPrompt,
-  downloadPromptConfig,
-  importPromptConfig,
-  saveCustomPrompt
-} from '@/utils/promptStorage'
+// PromptConfigDialog / promptStorage 已移除
 
 export default {
   components: {
     Sidebar,
     Color,
-    PromptConfigDialog
+    // PromptConfigDialog 已移除
   },
   props: {
     configData: {
@@ -569,14 +496,7 @@ export default {
       },
       testingAi: false,
       aiTestResult: null,
-      // 提示词配置管理
-      promptConfig: {
-        selectedId: 'default'
-      },
-      presetPrompts: [],
-      customPrompts: [],
-      promptDialogVisible: false,
-      editingPromptConfig: null
+      // 提示词配置管理已移除
     }
   },
   computed: {
@@ -587,15 +507,7 @@ export default {
       aiConfig: state => state.aiConfig
     }),
     // 当前选中的配置是否可编辑（预设配置不可编辑）
-    canEditCurrentPrompt() {
-      const currentConfig = getPromptById(this.promptConfig.selectedId)
-      return currentConfig && !currentConfig.isPreset
-    },
-    // 当前选中的配置是否可删除（预设配置不可删除）
-    canDeleteCurrentPrompt() {
-      const currentConfig = getPromptById(this.promptConfig.selectedId)
-      return currentConfig && !currentConfig.isPreset
-    }
+    // 提示词配置 computed 已移除
   },
   watch: {
     activeSidebar(val) {
@@ -611,7 +523,7 @@ export default {
   created() {
     this.initLoacalConfig()
     this.initAiConfig()
-    this.initPromptConfig()
+
     this.$bus.$on('toggleOpenNodeRichText', this.onToggleOpenNodeRichText)
   },
   beforeDestroy() {
@@ -811,158 +723,7 @@ export default {
       }
     },
 
-    // ===== 提示词配置管理方法 =====
-
-    // 初始化提示词配置
-    initPromptConfig() {
-      this.presetPrompts = PRESET_PROMPTS
-      this.loadCustomPrompts()
-      this.promptConfig.selectedId = getSelectedPromptId()
-    },
-
-    // 加载自定义配置
-    loadCustomPrompts() {
-      this.customPrompts = getCustomPrompts()
-    },
-
-    // 处理配置切换
-    handlePromptConfigChange(id) {
-      setSelectedPromptId(id)
-      this.$message.success('提示词配置已切换')
-      console.log('切换到配置:', id)
-    },
-
-    // 新建配置
-    handleCreatePrompt() {
-      this.editingPromptConfig = null
-      this.promptDialogVisible = true
-    },
-
-    // 编辑配置
-    handleEditPrompt() {
-      if (!this.canEditCurrentPrompt) {
-        this.$message.warning('预设配置不可编辑')
-        return
-      }
-      
-      const currentConfig = getPromptById(this.promptConfig.selectedId)
-      if (currentConfig) {
-        this.editingPromptConfig = currentConfig
-        this.promptDialogVisible = true
-      }
-    },
-
-    // 删除配置
-    handleDeletePrompt() {
-      if (!this.canDeleteCurrentPrompt) {
-        this.$message.warning('预设配置不可删除')
-        return
-      }
-
-      this.$confirm('确定要删除这个配置吗？', '确认删除', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        const success = deleteCustomPrompt(this.promptConfig.selectedId)
-        if (success) {
-          this.$message.success('配置已删除')
-          this.loadCustomPrompts()
-          this.promptConfig.selectedId = getSelectedPromptId()
-        } else {
-          this.$message.error('删除失败')
-        }
-      }).catch(() => {
-        // 取消删除
-      })
-    },
-
-    // 导入配置
-    handleImportPrompt() {
-      // 创建文件输入元素
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.accept = '.json'
-      
-      input.onchange = (e) => {
-        const file = e.target.files[0]
-        if (!file) return
-        
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          try {
-            const result = importPromptConfig(event.target.result)
-            
-            if (!result.success) {
-              this.$message.error('导入失败: ' + result.error)
-              return
-            }
-            
-            // 检查是否已存在
-            if (result.exists) {
-              this.$confirm(
-                `配置 "${result.config.name}" 已存在，是否覆盖？`,
-                '确认导入',
-                {
-                  confirmButtonText: '覆盖',
-                  cancelButtonText: '取消',
-                  type: 'warning'
-                }
-              ).then(() => {
-                this.doImportPrompt(result.config)
-              }).catch(() => {
-                // 取消导入
-              })
-            } else {
-              this.doImportPrompt(result.config)
-            }
-          } catch (error) {
-            this.$message.error('导入失败: ' + error.message)
-            console.error('导入配置失败:', error)
-          }
-        }
-        
-        reader.readAsText(file)
-      }
-      
-      input.click()
-    },
-
-    // 执行导入
-    doImportPrompt(config) {
-      const savedId = saveCustomPrompt(config)
-      if (savedId) {
-        this.$message.success('配置导入成功')
-        this.loadCustomPrompts()
-        this.promptConfig.selectedId = savedId
-        setSelectedPromptId(savedId)
-      } else {
-        this.$message.error('保存配置失败')
-      }
-    },
-
-    // 导出配置
-    handleExportPrompt() {
-      const currentConfig = getPromptById(this.promptConfig.selectedId)
-      if (!currentConfig) {
-        this.$message.warning('未找到当前配置')
-        return
-      }
-      
-      const success = downloadPromptConfig(currentConfig)
-      if (success) {
-        this.$message.success('配置已导出')
-      } else {
-        this.$message.error('导出失败')
-      }
-    },
-
-    // 配置保存后的回调
-    handlePromptConfigSaved(savedId) {
-      this.loadCustomPrompts()
-      this.promptConfig.selectedId = savedId
-      setSelectedPromptId(savedId)
-    }
+    // 提示词配置方法已移除
   }
 }
 </script>
@@ -1035,28 +796,6 @@ export default {
     }
   }
 
-  // 提示词配置部分样式
-  .promptConfigSection {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-
-    .sectionTitle {
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(26, 26, 26, 0.8);
-      margin-bottom: 12px;
-    }
-  }
-
-  &.isDark {
-    .promptConfigSection {
-      border-top-color: hsla(0, 0%, 100%, 0.1);
-
-      .sectionTitle {
-        color: hsla(0, 0%, 100%, 0.8);
-      }
-    }
-  }
+  // 提示词配置样式已移除
 }
 </style>

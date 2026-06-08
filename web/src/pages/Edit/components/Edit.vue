@@ -50,8 +50,7 @@
       :mindMap="mindMap"
     ></NodeImgPlacementToolbar>
     <NodeNoteSidebar v-if="mindMap" :mindMap="mindMap"></NodeNoteSidebar>
-    <AiCreate v-if="mindMap && enableAi" :mindMap="mindMap"></AiCreate>
-    <AiChat v-if="enableAi"></AiChat>
+    <AiReasoningPanel v-if="mindMap && enableAi" :mindMap="mindMap"></AiReasoningPanel>
     <div
       class="dragMask"
       v-if="showDragMask"
@@ -124,8 +123,7 @@ import Setting from './Setting.vue'
 import AssociativeLineStyle from './AssociativeLineStyle.vue'
 import NodeImgPlacementToolbar from './NodeImgPlacementToolbar.vue'
 import NodeNoteSidebar from './NodeNoteSidebar.vue'
-import AiCreate from './AiCreate.vue'
-import AiChat from './AiChat.vue'
+import AiReasoningPanel from './AiReasoningPanel.vue'
 // 引入AI响应处理功能
 import aiResponseMixin from '@/mixins/aiResponseMixin.js'
 // 引入运行时补丁
@@ -194,8 +192,7 @@ export default {
     AssociativeLineStyle,
     NodeImgPlacementToolbar,
     NodeNoteSidebar,
-    AiCreate,
-    AiChat
+    AiReasoningPanel
   },
   data() {
     return {

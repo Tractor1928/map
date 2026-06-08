@@ -105,10 +105,7 @@
       <div class="item" @click="exec('EXPORT_CUR_NODE_TO_PNG')">
         <span class="name">{{ $t('contextmenu.exportNodeToPng') }}</span>
       </div>
-      <div class="splitLine" v-if="enableAi"></div>
-      <div class="item" @click="aiCreate" v-if="enableAi">
-        <span class="name">{{ $t('contextmenu.aiCreate') }}</span>
-      </div>
+      <!-- AI 续写菜单项已移除 -->
     </template>
     <template v-if="type === 'svg'">
       <div class="item" @click="exec('RETURN_CENTER')">
@@ -216,8 +213,7 @@ export default {
   computed: {
     ...mapState({
       isZenMode: state => state.localConfig.isZenMode,
-      isDark: state => state.localConfig.isDark,
-      enableAi: state => state.localConfig.enableAi
+      isDark: state => state.localConfig.isDark
     }),
     expandList() {
       return [
@@ -509,11 +505,7 @@ export default {
       }
     },
 
-    // AI续写
-    aiCreate() {
-      this.$bus.$emit('ai_create_part', this.node)
-      this.hide()
-    }
+    // AI 续写方法已移除
   }
 }
 </script>

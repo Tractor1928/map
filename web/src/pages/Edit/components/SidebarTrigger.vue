@@ -39,20 +39,14 @@ export default {
     ...mapState({
       isDark: state => state.localConfig.isDark,
       activeSidebar: state => state.activeSidebar,
-      isReadonly: state => state.isReadonly,
-      enableAi: state => state.localConfig.enableAi
+      isReadonly: state => state.isReadonly
     }),
 
     triggerList() {
       let list = sidebarTriggerList[this.$i18n.locale] || sidebarTriggerList.zh
       if (this.isReadonly) {
         list = list.filter(item => {
-          return ['outline', 'shortcutKey', 'ai'].includes(item.value)
-        })
-      }
-      if (!this.enableAi) {
-        list = list.filter(item => {
-          return item.value !== 'ai'
+          return ['outline', 'shortcutKey'].includes(item.value)
         })
       }
       return list
