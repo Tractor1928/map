@@ -19,6 +19,7 @@
           :segments="segments"
           :current-segment="currentSegment"
           :node-title="currentNodeTitle"
+          :is-q-a="!!qaTitle"
           :has-next-segment="currentSegment < segments.length - 1"
           :has-prev-segment="currentSegment > 0"
           :has-children="hasChildren"
@@ -57,6 +58,7 @@ import NodeCard from './NodeCard.vue'
 import BottomChatBar from './BottomChatBar.vue'
 import ThinkingDrawer from './ThinkingDrawer.vue'
 import { createTreeNavigator } from './useTreeNavigator'
+import { createCardResolver } from './useCardResolver'
 import { splitContent } from '@/utils/segmentSplitter'
 
 export default {
@@ -72,10 +74,19 @@ export default {
       // 树导航器
       treeNav: null,
 
+      // Card 解析器
+      cardResolver: null,
+
       // 当前状态
       currentNodeId: '',
       currentSegment: 0,
       segments: [],
+
+      // QA 合并模式下的标题（问题文本）
+      qaTitle: '',
+
+      // 当前 QA 卡的回答节点 ID（用于流式更新追踪）
+      answerNodeId: null,
 
       // 完整树数据
       treeData: null,
@@ -104,14 +115,16 @@ export default {
       return this.treeNav.getNodeData(this.currentNodeId)
     },
     currentNodeTitle() {
+      // QA 合并模式：使用问题文本作为标题
+      if (this.qaTitle) return this.qaTitle
       const node = this.currentNode
       if (!node) return ''
       const text = this.treeNav._getNodeText(node)
       return text.length > 50 ? text.substring(0, 50) + '...' : text
     },
     hasChildren() {
-      if (!this.treeNav || !this.currentNodeId) return false
-      return this.treeNav.hasChildren(this.currentNodeId)
+      if (!this.cardResolver || !this.currentNodeId) return false
+      return this.cardResolver.hasChildCard(this.currentNodeId)
     },
     hasParent() {
       if (!this.treeNav || !this.currentNodeId) return false
@@ -137,6 +150,7 @@ export default {
      */
     init() {
       this.treeNav = createTreeNavigator()
+      this.cardResolver = createCardResolver(this.treeNav)
       this.treeData = this.treeNav.loadTreeData()
 
       const rootId = this.treeNav.getRootId()
@@ -156,20 +170,20 @@ export default {
     navigateToNode(nodeId, segmentIndex = 0, anim = '') {
       if (!nodeId) return
 
+      // 使用 Card 解析器获取卡片数据
+      const card = this.cardResolver.resolveCard(nodeId)
+      if (!card) return
+
       // 保存当前节点的段位置
-      if (this.currentNodeId && this.currentNodeId !== nodeId) {
+      if (this.currentNodeId && this.currentNodeId !== card.nodeId) {
         this.parentSegmentMap[this.currentNodeId] = this.currentSegment
       }
 
-      this.currentNodeId = nodeId
+      this.currentNodeId = card.nodeId
       this.currentSegment = segmentIndex
-
-      const node = this.treeNav.findNode(nodeId)
-      if (!node) return
-
-      // 计算分段
-      const text = this.treeNav._getNodeText(node)
-      this.segments = splitContent(text)
+      this.segments = card.segments
+      this.qaTitle = card.title
+      this.answerNodeId = card.answerNodeId
 
       // 确保段索引合法
       if (this.currentSegment >= this.segments.length) {
@@ -180,10 +194,10 @@ export default {
       }
 
       // 计算面包屑
-      this.breadcrumb = this.treeNav.getNodePath(nodeId)
+      this.breadcrumb = this.cardResolver.getBreadcrumb(card.nodeId)
 
       // 计算兄弟节点预览
-      this.siblingPreview = this.buildSiblingPreview(nodeId)
+      this.siblingPreview = this.cardResolver.getCardSiblings(card.nodeId)
 
       // 设置动画
       this.transitionName = anim || 'slide-up'
@@ -197,34 +211,6 @@ export default {
       })
 
       this.loading = false
-    },
-
-    /**
-     * 构建兄弟节点预览
-     */
-    buildSiblingPreview(nodeId) {
-      if (!this.treeNav) return null
-      const siblings = this.treeNav.getSiblings(nodeId)
-      if (siblings.length <= 1) {
-        // 没有兄弟节点（根节点或唯一子节点）
-        return {
-          prev: null,
-          current: { id: nodeId, text: this.currentNodeTitle },
-          next: null
-        }
-      }
-      const idx = this.treeNav.getSiblingIndex(nodeId)
-      return {
-        prev: idx > 0 ? { id: siblings[idx - 1].id, text: this.truncateText(siblings[idx - 1].text, 30) } : null,
-        current: { id: nodeId, text: this.truncateText(this.currentNodeTitle, 30) },
-        next: idx < siblings.length - 1 ? { id: siblings[idx + 1].id, text: this.truncateText(siblings[idx + 1].text, 30) } : null
-      }
-    },
-
-    truncateText(text, maxLen) {
-      if (!text) return ''
-      const plain = String(text).replace(/<[^>]+>/g, '')
-      return plain.length > maxLen ? plain.substring(0, maxLen) + '...' : plain
     },
 
     // ==================== 导航处理 ====================
@@ -250,7 +236,7 @@ export default {
     },
 
     handleNextSibling() {
-      const next = this.treeNav.getNextSibling(this.currentNodeId)
+      const next = this.cardResolver.getNextCard(this.currentNodeId)
       if (next) {
         this.navigateToNode(next.id, 0, 'slide-up')
       } else {
@@ -259,19 +245,19 @@ export default {
     },
 
     handlePrevSibling() {
-      const prev = this.treeNav.getPrevSibling(this.currentNodeId)
+      const prev = this.cardResolver.getPrevCard(this.currentNodeId)
       if (prev) {
-        const prevNode = this.treeNav.findNode(prev.id)
-        const prevText = this.treeNav._getNodeText(prevNode)
-        const prevSegments = splitContent(prevText)
-        this.navigateToNode(prev.id, prevSegments.length - 1, 'slide-down')
+        // 定位到上一个兄弟的最后一段
+        const prevCard = this.cardResolver.resolveCard(prev.id)
+        const prevSegments = prevCard ? prevCard.segments : []
+        this.navigateToNode(prev.id, Math.max(0, prevSegments.length - 1), 'slide-down')
       } else {
         this.vibrate()
       }
     },
 
     handleEnterChild() {
-      const firstChild = this.treeNav.getFirstChild(this.currentNodeId)
+      const firstChild = this.cardResolver.getChildCard(this.currentNodeId)
       if (firstChild) {
         // 保存当前段位置以便返回时恢复
         this.parentSegmentMap[this.currentNodeId] = this.currentSegment
@@ -282,7 +268,7 @@ export default {
     },
 
     handleBackParent() {
-      const parent = this.treeNav.getParent(this.currentNodeId)
+      const parent = this.cardResolver.getParentCard(this.currentNodeId)
       if (parent) {
         const savedSegment = this.parentSegmentMap[parent.id] || 0
         this.navigateToNode(parent.id, savedSegment, 'slide-right')
@@ -329,28 +315,30 @@ export default {
 
     // ==================== AI 事件处理 ====================
 
-    onNodeCreated(nodeId) {
-      // 新节点已创建，数据已保存
-      // 更新兄弟预览
-      this.siblingPreview = this.buildSiblingPreview(this.currentNodeId)
+    onNodeCreated(/* nodeId */) {
+      // 新节点已创建，刷新当前卡的兄弟预览
+      this.siblingPreview = this.cardResolver.getCardSiblings(this.currentNodeId)
     },
 
     onAnswerUpdating({ nodeId, text }) {
-      // 实时更新当前显示的段内容
-      if (nodeId === this.currentNodeId) {
+      // 检查是否当前 QA 卡的回答节点在实时更新
+      if (nodeId === this.answerNodeId) {
         this.segments = splitContent(text)
+        // 保持当前段索引合法
+        if (this.currentSegment >= this.segments.length) {
+          this.currentSegment = Math.max(0, this.segments.length - 1)
+        }
       }
     },
 
     onAnswerComplete({ nodeId, text }) {
-      // AI 回答完成
-      if (nodeId === this.currentNodeId) {
+      // QA 卡回答完成，刷新分段和预览
+      if (nodeId === this.answerNodeId) {
         this.segments = splitContent(text)
         this.currentSegment = 0
       }
-      // 提示用户可以查看
       this.$nextTick(() => {
-        this.siblingPreview = this.buildSiblingPreview(this.currentNodeId)
+        this.siblingPreview = this.cardResolver.getCardSiblings(this.currentNodeId)
       })
     },
 
@@ -371,14 +359,15 @@ export default {
       if (document.visibilityState === 'visible') {
         // 页面重新可见时刷新数据
         this.treeData = this.treeNav.loadTreeData()
-        // 刷新当前显示
+        // 刷新当前卡片的显示
         if (this.currentNodeId) {
-          const node = this.treeNav.findNode(this.currentNodeId)
-          if (node) {
-            const text = this.treeNav._getNodeText(node)
-            this.segments = splitContent(text)
-            this.breadcrumb = this.treeNav.getNodePath(this.currentNodeId)
-            this.siblingPreview = this.buildSiblingPreview(this.currentNodeId)
+          const card = this.cardResolver.resolveCard(this.currentNodeId)
+          if (card) {
+            this.segments = card.segments
+            this.qaTitle = card.title
+            this.answerNodeId = card.answerNodeId
+            this.breadcrumb = this.cardResolver.getBreadcrumb(card.nodeId)
+            this.siblingPreview = this.cardResolver.getCardSiblings(card.nodeId)
           }
         }
       }

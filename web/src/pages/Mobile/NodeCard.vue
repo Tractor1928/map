@@ -37,7 +37,8 @@
     </div>
 
     <!-- 节点名称 -->
-    <div class="card-node-name" v-if="nodeTitle">
+    <div class="card-node-name" v-if="nodeTitle" :class="{ 'qa-title': isQA }">
+      <span v-if="isQA" class="qa-icon">💬</span>
       {{ nodeTitle }}
     </div>
 
@@ -128,6 +129,11 @@ export default {
     siblingPreview: {
       type: Object,
       default: () => null
+    },
+    /** 是否 QA 合并模式（问题作为标题，回答作为正文） */
+    isQA: {
+      type: Boolean,
+      default: false
     }
   },
   emits: [
@@ -316,6 +322,29 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   flex-shrink: 0;
+
+  // QA 合并模式：标题更醒目
+  &.qa-title {
+    padding: 12px 20px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    white-space: normal;
+    line-height: 1.5;
+    border-bottom: 1px solid #f0f0f6;
+    background: linear-gradient(135deg, #f0f7ff 0%, #fafaff 100%);
+    border-radius: 12px 12px 0 0;
+    margin: -8px 0 0 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    .qa-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
 }
 
 // 段落内容区
