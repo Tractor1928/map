@@ -539,7 +539,7 @@ export default {
       const freshData = getData()
       if (freshData && freshData.root) {
         // 保存当前视图状态
-        const currentView = this.mindMap.view.getViewData()
+        const currentView = this.mindMap.view.getTransformData()
         // 设置新数据
         this.mindMap.setFullData({
           root: freshData.root,
