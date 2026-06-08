@@ -31,10 +31,6 @@
         </button>
       </div>
 
-      <!-- 展开后的提示 -->
-      <div class="input-hint" v-if="isExpanded">
-        <span>输入问题，AI 将在此节点下生成回答</span>
-      </div>
     </div>
   </div>
 </template>
