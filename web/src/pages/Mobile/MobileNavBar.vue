@@ -69,6 +69,19 @@ export default {
       showMenu: false
     }
   },
+  watch: {
+    breadcrumb: {
+      handler() {
+        this.$nextTick(() => {
+          const el = this.$refs.breadcrumbScroll
+          if (el) {
+            el.scrollLeft = el.scrollWidth
+          }
+        })
+      },
+      immediate: true
+    }
+  },
   methods: {
     goToMindMap() {
       this.$router.push('/')
